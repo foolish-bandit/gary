@@ -24,17 +24,17 @@ export default function ModelsAndApiKeysPage() {
 
     return (
         <div className="space-y-4">
-            {/* Model Preferences */}
+            {/* Default assistant for tabular reviews */}
             <div className="pb-6">
                 <div className="flex items-center gap-2 mb-4">
                     <h2 className="text-2xl font-medium font-serif">
-                        Model Preferences
+                        Default assistant
                     </h2>
                 </div>
                 <div className="space-y-4 max-w-md">
                     <div>
                         <label className="text-sm text-gray-600 block mb-2">
-                            Tabular review model
+                            Assistant for tabular reviews
                         </label>
                         <TabularModelDropdown
                             value={
@@ -53,26 +53,26 @@ export default function ModelsAndApiKeysPage() {
                 </div>
             </div>
 
-            {/* API Keys */}
+            {/* AI service keys */}
             <div className="py-6">
                 <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-2xl font-medium font-serif">
-                        API Keys
+                        AI service keys
                     </h2>
                 </div>
                 <p className="text-sm text-gray-500 mb-4 max-w-xl">
-                    You must provide your own API keys for the app to work or
-                    add your API keys into the .env file if you are running your
-                    own instance of GaryOSS.
+                    GaryOSS connects to an outside AI service to answer
+                    questions. Add a service key below to enable answers, or
+                    add the keys to a <code>.env</code> file if you are
+                    running your own instance.
                 </p>
                 <p className="text-xs text-gray-400 mb-4 max-w-xl">
-                    Title generation automatically routes to the cheapest model
-                    of whichever provider you&rsquo;ve configured (Gemini Flash
-                    Lite if a Gemini key is set, otherwise Claude Haiku).
+                    Chat titles use the cheapest assistant from whichever
+                    service you have configured.
                 </p>
                 <div className="space-y-4 max-w-xl">
                     <ApiKeyField
-                        label="Anthropic (Claude) API Key"
+                        label="Anthropic (Claude) key"
                         placeholder="sk-ant-…"
                         initialValue={profile?.claudeApiKey ?? ""}
                         onSave={(value) =>
@@ -80,7 +80,7 @@ export default function ModelsAndApiKeysPage() {
                         }
                     />
                     <ApiKeyField
-                        label="Google (Gemini) API Key"
+                        label="Google (Gemini) key"
                         placeholder="AI…"
                         initialValue={profile?.geminiApiKey ?? ""}
                         onSave={(value) =>
@@ -119,7 +119,7 @@ function TabularModelDropdown({
                             <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-500" />
                         )}
                         <span className="truncate text-gray-900">
-                            {selected?.label ?? "Select a model"}
+                            {selected?.label ?? "Select an assistant"}
                         </span>
                     </span>
                     <ChevronDown
@@ -154,7 +154,7 @@ function TabularModelDropdown({
                                         onSelect={() => onChange(m.id)}
                                         title={
                                             !available
-                                                ? `Add a ${provider === "claude" ? "Claude" : "Gemini"} API key to use this model`
+                                                ? `Add a ${provider === "claude" ? "Claude" : "Gemini"} key in AI configuration to use this assistant`
                                                 : undefined
                                         }
                                     >

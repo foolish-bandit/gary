@@ -17,10 +17,10 @@ export function ApiKeyMissingModal({ open, onClose, provider, message }: Props) 
     const router = useRouter();
     if (!open) return null;
 
-    const providerName = provider ? providerLabel(provider) : "this provider";
+    const providerName = provider ? providerLabel(provider) : "the AI service";
     const body =
         message ??
-        `You haven't added a ${providerName} API key yet. Add one in your account settings to use this model.`;
+        `GaryOSS isn't connected to ${providerName} yet. Open AI configuration to add a key.`;
 
     const handleGoToAccount = () => {
         onClose();
@@ -40,7 +40,7 @@ export function ApiKeyMissingModal({ open, onClose, provider, message }: Props) 
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-amber-600" />
                         <h2 className="text-base font-medium text-gray-900">
-                            API key required
+                            GaryOSS isn&apos;t configured yet
                         </h2>
                     </div>
                     <button
@@ -68,7 +68,7 @@ export function ApiKeyMissingModal({ open, onClose, provider, message }: Props) 
                         onClick={handleGoToAccount}
                         className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700"
                     >
-                        Go to account settings
+                        Open AI configuration
                     </button>
                 </div>
             </div>
