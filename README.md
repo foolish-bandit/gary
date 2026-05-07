@@ -57,6 +57,24 @@ npm run build --prefix frontend
 npm run lint --prefix frontend
 ```
 
+## Deployment
+
+The Next.js frontend deploys to **Cloudflare Workers** (via the
+[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) adapter), not
+Cloudflare Pages. The Workers configuration lives in
+`frontend/wrangler.jsonc`.
+
+```bash
+cd frontend
+npm install
+npm run cf:build
+npm run cf:deploy
+```
+
+`cf:build` produces the OpenNext bundle in `frontend/.open-next/`; `cf:deploy`
+publishes it to Cloudflare Workers. Use `npm run cf:preview` to preview the
+built worker locally.
+
 ## License
 
 AGPL-3.0-only. See `LICENSE`.
