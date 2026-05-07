@@ -203,11 +203,11 @@ export default function DraftSomethingPage() {
                 router.push(`/assistant/chat/${newChatId}`);
                 return;
             }
-            setError("Could not start the draft. Try again.");
+            setError("This will be available once GaryOSS is connected to the backend.");
             setStarting(false);
         } catch (err) {
             console.error("Start drafting failed:", err);
-            setError("Could not start the draft. Try again.");
+            setError("This will be available once GaryOSS is connected to the backend.");
             setStarting(false);
         }
     };
