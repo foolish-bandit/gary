@@ -7,13 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChatHistoryProvider } from "@/app/contexts/ChatHistoryContext";
 import { SidebarContext } from "@/app/contexts/SidebarContext";
 import { AppSidebar } from "@/app/components/shared/AppSidebar";
+import { DevAuthBanner } from "@/components/dev-auth-banner";
 
 export default function MikeLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const { isAuthenticated, authLoading } = useAuth();
+    const { isAuthenticated, authLoading, isAuthBypassed } = useAuth();
     const router = useRouter();
 
     const [isSidebarOpenDesktop, setIsSidebarOpenDesktop] = useState(() => {
@@ -80,6 +81,7 @@ export default function MikeLayout({
                 value={{ setSidebarOpen: (open) => { setIsSidebarOpen(open); setIsSidebarOpenDesktop(open); } }}
             >
                 <div className="h-dvh bg-white flex flex-col">
+                    {isAuthBypassed && <DevAuthBanner />}
                     <div className="flex-1 flex overflow-hidden">
                         <AppSidebar
                             isOpen={isSidebarOpen}
