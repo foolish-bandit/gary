@@ -33,6 +33,7 @@ import type { MikeDocument, MikeMessage } from "../shared/types";
 
 export interface ChatInputHandle {
     addDoc: (doc: MikeDocument) => void;
+    focus: () => void;
 }
 
 interface Props {
@@ -41,6 +42,7 @@ interface Props {
     isLoading: boolean;
     hideAddDocButton?: boolean;
     hideWorkflowButton?: boolean;
+    hideModelToggle?: boolean;
     onProjectsClick?: () => void;
     projectName?: string;
     projectCmNumber?: string | null;
@@ -53,6 +55,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
         isLoading,
         hideAddDocButton,
         hideWorkflowButton,
+        hideModelToggle,
         onProjectsClick,
         projectName,
         projectCmNumber,
@@ -83,6 +86,9 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
                 if (prev.some((d) => d.id === doc.id)) return prev;
                 return [...prev, doc];
             });
+        },
+        focus: () => {
+            textareaRef.current?.focus();
         },
     }));
 
@@ -274,11 +280,13 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
                         </div>
 
                         <div className="flex items-center gap-1">
-                            <ModelToggle
-                                value={model}
-                                onChange={setModel}
-                                apiKeys={apiKeys}
-                            />
+                            {!hideModelToggle && (
+                                <ModelToggle
+                                    value={model}
+                                    onChange={setModel}
+                                    apiKeys={apiKeys}
+                                />
+                            )}
                             <button
                                 type="button"
                                 className="relative bg-gradient-to-b from-neutral-700 to-black text-white rounded-[10px] h-8 w-8 flex items-center justify-center cursor-pointer disabled:cursor-default disabled:from-neutral-600 disabled:to-black backdrop-blur-xl border border-white/30 active:enabled:scale-95 transition-all duration-150"
