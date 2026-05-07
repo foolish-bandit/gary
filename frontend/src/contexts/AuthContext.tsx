@@ -18,16 +18,40 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     authLoading: boolean;
+    /** True when NEXT_PUBLIC_GARY_SKIP_AUTH=true — dev/demo only. */
+    isAuthBypassed: boolean;
     signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Resolved once at module load. NEXT_PUBLIC_* is baked into the client bundle
+// at build time, so this is effectively a build-time toggle on the deployed
+// Worker. Never enable in production.
+const SKIP_AUTH = process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
+
+const DEMO_USER: User = {
+    id: "00000000-0000-0000-0000-000000000000",
+    email: "demo@gary.local",
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [authLoading, setAuthLoading] = useState(true);
+    // Lazy initial state so the bypass needs no setState inside the effect.
+    const [user, setUser] = useState<User | null>(() =>
+        SKIP_AUTH ? DEMO_USER : null,
+    );
+    const [authLoading, setAuthLoading] = useState(() => !SKIP_AUTH);
 
     useEffect(() => {
+        if (SKIP_AUTH) {
+            if (typeof window !== "undefined") {
+                console.warn(
+                    "[GaryOSS] NEXT_PUBLIC_GARY_SKIP_AUTH=true — running with a fake demo user. Backend calls will not be authenticated. Do not enable this in production.",
+                );
+            }
+            return;
+        }
+
         const ensureProfile = async (accessToken: string) => {
             const apiBase =
                 process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
@@ -77,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const signOut = async () => {
+        if (SKIP_AUTH) {
+            // No-op so the demo session stays stable. The bypass is build-time
+            // and would re-create the fake user on next mount anyway.
+            return;
+        }
         await supabase.auth.signOut();
         setUser(null);
     };
@@ -87,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 user,
                 isAuthenticated: !!user,
                 authLoading,
+                isAuthBypassed: SKIP_AUTH,
                 signOut,
             }}
         >
