@@ -3,13 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Lightbulb } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { useAssistantChat } from "@/app/hooks/useAssistantChat";
 import type { MikeMessage } from "@/app/components/shared/types";
 
@@ -77,12 +70,12 @@ export default function ExplainThisPage() {
                     </p>
                 </div>
 
-                <Card className="shadow-none"><CardContent className="space-y-4 p-5 md:p-6">
+                <div className="space-y-4 rounded-2xl border border-gray-200 p-5 md:p-6">
                     <div>
-                        <Label className="block mb-2">
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
                             Legal text
-                        </Label>
-                        <Textarea
+                        </label>
+                        <textarea
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             placeholder="Paste the clause, paragraph, or legal language you want explained."
@@ -92,19 +85,19 @@ export default function ExplainThisPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <Input
+                        <input
                             value={context}
                             onChange={(e) => setContext(e.target.value)}
                             placeholder="Context / document type (optional)"
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
-                        <Input
+                        <input
                             value={goal}
                             onChange={(e) => setGoal(e.target.value)}
                             placeholder="Goal (optional)"
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
-                        <Input
+                        <input
                             value={tone}
                             onChange={(e) => setTone(e.target.value)}
                             placeholder="Preferred tone (optional)"
@@ -112,26 +105,24 @@ export default function ExplainThisPage() {
                         />
                     </div>
 
-                    <Button
+                    <button
                         type="button"
                         onClick={handleExplain}
                         disabled={!text.trim() || starting}
-                        className="inline-flex items-center gap-2"
+                        className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <Lightbulb className="h-4 w-4" />
                         {starting ? "Starting…" : "Explain This"}
-                    </Button>
+                    </button>
 
                     {error && (
-                        <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
+                        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                            {error}
+                        </p>
                     )}
-                </CardContent></Card>
+                </div>
 
-                <Separator className="my-8" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                         "What it says",
                         "Why it matters",
@@ -154,14 +145,13 @@ export default function ExplainThisPage() {
                 </div>
 
                 <div className="mt-6">
-                    <Button
+                    <button
                         type="button"
-                        variant="ghost"
                         onClick={() => router.push("/assistant")}
                         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
                     >
                         Back to Ask Gary <ArrowRight className="h-4 w-4" />
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>
