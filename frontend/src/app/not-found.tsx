@@ -8,15 +8,14 @@ export default function NotFound() {
                     Page not found
                 </h1>
                 <p className="text-[0.9375rem] text-gray-500 leading-relaxed mb-8">
-                    The page you&apos;re looking for doesn&apos;t exist or may
-                    have been moved.
+                    We couldn&apos;t find the page you were looking for.
                 </p>
 
                 <Link
                     href="/"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white bg-gray-900 hover:bg-gray-700 transition-colors"
                 >
-                    Go home
+                    Return Home
                 </Link>
             </div>
         </div>

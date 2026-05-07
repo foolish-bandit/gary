@@ -403,7 +403,7 @@ export function AddNewTRModal({
                                         <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg overflow-y-auto max-h-48">
                                             {projects.length === 0 ? (
                                                 <p className="px-3 py-2 text-xs text-gray-400">
-                                                    No projects found
+                                                    No projects yet. Create one for each client, case, or matter.
                                                 </p>
                                             ) : (
                                                 projects.map((p) => (
@@ -470,8 +470,8 @@ export function AddNewTRModal({
                                         heading={isProjectMode ? "Project Documents" : "Documents"}
                                         emptyMessage={
                                             isProjectMode || underProject
-                                                ? "No ready documents in this project"
-                                                : "No documents yet"
+                                                ? "No documents ready in this project yet. Upload a PDF or Word document."
+                                                : "No documents yet. Upload a PDF or Word document to start."
                                         }
                                     />
                                 </div>
@@ -501,7 +501,7 @@ export function AddNewTRModal({
                                 ) : (
                                     <Upload className="h-3.5 w-3.5" />
                                 )}
-                                {uploading ? "Uploading…" : "Upload"}
+                                {uploading ? "Uploading your document…" : "Upload"}
                             </button>
                         </div>
                         <div className="flex items-center gap-2">

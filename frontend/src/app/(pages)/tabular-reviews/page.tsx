@@ -355,23 +355,25 @@ export default function TabularReviewsPage() {
                             <>
                                 <Table2 className="h-8 w-8 text-gray-300 mb-4" />
                                 <p className="text-2xl font-medium font-serif text-gray-900">
-                                    Tabular Reviews
+                                    No reviews yet
                                 </p>
                                 <p className="mt-1 text-xs text-gray-400 max-w-xs text-left">
-                                    Extract data from documents into tables
-                                    using AI.
+                                    Run a contract review across one or more
+                                    documents. Gary fills a table with
+                                    parties, dates, key terms, risks, and
+                                    anything else you ask for.
                                 </p>
                                 <button
                                     onClick={() => setNewTROpen(true)}
                                     disabled={creating}
                                     className="mt-4 inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 transition-colors shadow-md disabled:opacity-40"
                                 >
-                                    + Create New
+                                    + Create Review
                                 </button>
                             </>
                         ) : (
                             <p className="text-sm text-gray-400">
-                                No reviews found
+                                Nothing matched that search or filter.
                             </p>
                         )}
                     </div>

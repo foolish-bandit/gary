@@ -84,7 +84,7 @@ export default function SignupPage() {
                 router.push("/assistant");
             }, 2000);
         } catch (error: any) {
-            setError(error.message || "An error occurred during signup");
+            setError(error.message || "Could not create your account. Try again.");
         } finally {
             setLoading(false);
         }
@@ -106,7 +106,7 @@ export default function SignupPage() {
                             Account created!
                         </h2>
                         <p className="text-gray-600 leading-relaxed">
-                            Redirecting you to the home page...
+                            Taking you to Gary…
                         </p>
                     </div>
                 </div>
@@ -249,7 +249,7 @@ export default function SignupPage() {
                             disabled={loading}
                             className="w-full bg-black hover:bg-gray-900 text-white"
                         >
-                            {loading ? "Creating account..." : "Sign up"}
+                            {loading ? "Creating your account…" : "Sign up"}
                         </Button>
                     </form>
 

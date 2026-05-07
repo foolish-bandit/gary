@@ -49,7 +49,7 @@ export function FileDirectory({
     onChange,
     allowMultiple = true,
     forceExpanded = false,
-    emptyMessage = "No documents yet",
+    emptyMessage = "No documents yet. Upload a PDF or Word document to get started.",
     heading = "Documents",
     onDelete,
 }: FileDirectoryProps) {
@@ -266,7 +266,7 @@ export function FileDirectory({
                                 <div>
                                     {docs.length === 0 ? (
                                         <p className="pl-7 py-1 text-xs text-gray-400">
-                                            Empty
+                                            No documents in this folder yet.
                                         </p>
                                     ) : (
                                         docs.map((doc) => {

@@ -95,7 +95,7 @@ function SimpleProjectPicker({
                 <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-sm overflow-y-auto max-h-40">
                     {filtered.length === 0 ? (
                         <p className="px-3 py-3 text-xs text-gray-400 text-center">
-                            No projects found
+                            No projects yet.
                         </p>
                     ) : (
                         filtered.map((p) => (
@@ -206,7 +206,7 @@ function TabularPanel({ workflow }: { workflow: MikeWorkflow }) {
             <div className="flex-1 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
                 {columns.length === 0 ? (
                     <p className="px-4 py-6 text-xs text-center text-gray-400">
-                        No columns defined
+                        No columns yet. Add one to tell Gary what to extract from each document.
                     </p>
                 ) : (
                     columns.map((col) => {
@@ -675,8 +675,8 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                             forceExpanded={!!q}
                                             emptyMessage={
                                                 q
-                                                    ? "No matches found"
-                                                    : "No documents yet"
+                                                    ? "Nothing matched that search. Try a document title."
+                                                    : "No documents yet. Upload a PDF or Word document to start."
                                             }
                                         />
                                     </div>
@@ -796,10 +796,10 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                     forceExpanded={!!q || inProject}
                                     emptyMessage={
                                         q
-                                            ? "No matches found"
+                                            ? "Nothing matched that search. Try a document title."
                                             : inProject
-                                              ? "No documents in this project"
-                                              : "No documents yet"
+                                              ? "No documents in this project yet. Upload a PDF or Word document to add one."
+                                              : "No documents yet. Upload a PDF or Word document to start."
                                     }
                                 />
                             </div>

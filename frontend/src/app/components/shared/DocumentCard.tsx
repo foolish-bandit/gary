@@ -57,9 +57,9 @@ export function DocumentCard({ document, onRemove, onClick, selected }: Props) {
         </p>
         <p className="text-xs text-gray-400">
           {isProcessing
-            ? "Processing…"
+            ? "Reading the document…"
             : isError
-            ? "Upload failed"
+            ? "Upload failed — try again"
             : [
                 document.size_bytes != null ? formatBytes(document.size_bytes) : null,
                 document.page_count ? `${document.page_count}p` : null,

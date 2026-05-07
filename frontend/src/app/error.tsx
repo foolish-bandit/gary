@@ -5,8 +5,10 @@ import { useEffect } from "react";
 
 export default function Error({
     error,
+    reset,
 }: {
     error: Error & { digest?: string };
+    reset: () => void;
 }) {
     useEffect(() => {
         console.error("App error:", error);
@@ -19,16 +21,23 @@ export default function Error({
                     Something went wrong
                 </h1>
                 <p className="text-[0.9375rem] text-gray-500 leading-relaxed mb-8">
-                    We encountered an unexpected error. This has been logged and
-                    our team will look into it.
+                    Gary hit an unexpected problem. Try again, or return home.
                 </p>
 
-                <Link
-                    href="/"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white bg-gray-900 hover:bg-gray-700 transition-colors"
-                >
-                    Home
-                </Link>
+                <div className="flex items-center justify-center gap-3">
+                    <button
+                        onClick={() => reset()}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white bg-gray-900 hover:bg-gray-700 transition-colors"
+                    >
+                        Try Again
+                    </button>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                        Return Home
+                    </Link>
+                </div>
             </div>
         </div>
     );

@@ -269,23 +269,23 @@ export function ProjectsOverview() {
                             <>
                                 <FolderOpen className="h-8 w-8 text-gray-300 mb-4" />
                                 <p className="text-2xl font-medium font-serif text-gray-900">
-                                    Projects
+                                    No projects yet
                                 </p>
                                 <p className="mt-1 text-xs text-gray-400 max-w-xs">
-                                    Upload documents into projects and to
-                                    commence chats and tabular reviews with
-                                    them.
+                                    Create a project for each client, case, or
+                                    matter. You can then upload documents,
+                                    chat with Gary, and run reviews.
                                 </p>
                                 <button
                                     onClick={() => setModalOpen(true)}
                                     className="mt-4 inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 transition-colors shadow-md"
                                 >
-                                    + Create New
+                                    + Create Project
                                 </button>
                             </>
                         ) : (
                             <p className="text-sm text-gray-400">
-                                No {activeTab} projects
+                                No {activeTab} projects yet.
                             </p>
                         )}
                     </div>

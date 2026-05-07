@@ -52,7 +52,7 @@ export function ProjectPicker({ projects, loading, selectedId, onSelect }: Props
                     </div>
                 ) : filtered.length === 0 ? (
                     <p className="text-center text-sm text-gray-400 py-8">
-                        {q ? "No matches found" : "No projects yet"}
+                        {q ? "Nothing matched that search. Try a client name or project title." : "No projects yet. Create one for each client, case, or matter."}
                     </p>
                 ) : (
                     <div className="rounded-sm border border-gray-100 overflow-hidden">

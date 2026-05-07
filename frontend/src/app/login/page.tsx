@@ -37,7 +37,7 @@ export default function LoginPage() {
 
             router.push("/assistant");
         } catch (error: any) {
-            setError(error.message || "An error occurred during login");
+            setError(error.message || "Could not sign in. Check your email and password and try again.");
         } finally {
             setLoading(false);
         }
@@ -115,7 +115,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full mt-5 bg-black hover:bg-gray-900 text-white"
                         >
-                            {loading ? "Logging in..." : "Log in"}
+                            {loading ? "Logging in…" : "Log in"}
                         </Button>
                     </form>
                 </div>
