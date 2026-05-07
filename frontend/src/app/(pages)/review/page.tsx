@@ -124,11 +124,11 @@ export default function ReviewContractPage() {
                 router.push(`/assistant/chat/${newChatId}`);
                 return;
             }
-            setError("Could not start the review. Try again.");
+            setError("This will be available once GaryOSS is connected to the backend.");
             setStarting(false);
         } catch (err) {
             console.error("Start review failed:", err);
-            setError("Could not start the review. Try again.");
+            setError("This will be available once GaryOSS is connected to the backend.");
             setStarting(false);
         }
     };

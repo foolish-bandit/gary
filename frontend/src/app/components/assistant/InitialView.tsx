@@ -8,6 +8,7 @@ import {
     MessageSquare,
     Table2,
     Upload,
+    Lightbulb,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -42,6 +43,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
     const [iconOffset, setIconOffset] = useState(0);
     const [textOffset, setTextOffset] = useState(0);
     const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const textRef = useRef<HTMLHeadingElement>(null);
     const chatInputRef = useRef<ChatInputHandle>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +80,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
         e.target.value = "";
         if (files.length === 0) return;
         setUploading(true);
+        setUploadError(null);
         try {
             for (const f of files) {
                 const doc = await uploadStandaloneDocument(f);
@@ -86,6 +89,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
             chatInputRef.current?.focus();
         } catch (err) {
             console.error("Upload failed:", err);
+            setUploadError("This will be available once GaryOSS is connected to the backend.");
         } finally {
             setUploading(false);
         }
@@ -123,6 +127,15 @@ export function InitialView({ onSubmit }: InitialViewProps) {
             Icon: FileSignature,
             onClick: () => router.push("/draft"),
         },
+        {
+            key: "explain",
+            title: "Explain This",
+            description:
+                "Break down confusing legal language into plain English.",
+            Icon: Lightbulb,
+            onClick: () => router.push("/explain"),
+        },
+
     ];
 
     return (
@@ -169,7 +182,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
                     </div>
 
                     <div
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6"
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
                         aria-label="What would you like to do?"
                     >
                         {actions.map(
@@ -210,6 +223,12 @@ export function InitialView({ onSubmit }: InitialViewProps) {
                         onProjectsClick={() => setProjectModalOpen(true)}
                         hideModelToggle
                     />
+
+                    {uploadError && (
+                        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
+                            {uploadError}
+                        </p>
+                    )}
 
                     <div className="text-center">
                         <p className="text-xs py-3 mb-3 text-gray-500">
