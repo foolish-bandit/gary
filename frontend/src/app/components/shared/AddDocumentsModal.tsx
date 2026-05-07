@@ -252,7 +252,9 @@ export function AddDocumentsModal({
                         allowMultiple={allowMultiple}
                         forceExpanded={!!q}
                         emptyMessage={
-                            q ? "No matches found" : "No documents yet"
+                            q
+                                ? "Nothing matched that search. Try a document title."
+                                : "No documents yet. Upload a PDF or Word document to start."
                         }
                         onDelete={handleDelete}
                     />
@@ -279,7 +281,7 @@ export function AddDocumentsModal({
                             ) : (
                                 <Upload className="h-3.5 w-3.5" />
                             )}
-                            {uploading ? "Uploading…" : "Upload"}
+                            {uploading ? "Uploading your document…" : "Upload"}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">

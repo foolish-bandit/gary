@@ -168,7 +168,7 @@ export function AssistantWorkflowModal({
                             </div>
                         ) : filteredWorkflows.length === 0 ? (
                             <p className="px-4 py-8 text-sm text-center text-gray-400">
-                                {search ? "No matches found" : "No assistant workflows found"}
+                                {search ? "Nothing matched that search." : "No drafting workflows yet."}
                             </p>
                         ) : (
                             filteredWorkflows.map((wf) => (

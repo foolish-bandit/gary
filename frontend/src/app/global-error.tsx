@@ -4,8 +4,10 @@ import { useEffect } from "react";
 
 export default function GlobalError({
     error,
+    reset,
 }: {
     error: Error & { digest?: string };
+    reset: () => void;
 }) {
     useEffect(() => {
         console.error("Global error:", error);
@@ -81,14 +83,13 @@ export default function GlobalError({
                 <div className="error-container">
                     <h1 className="error-title">Something went wrong</h1>
                     <p className="error-message">
-                        We encountered an unexpected error. This has been logged
-                        and our team will look into it.
+                        Gary hit an unexpected problem. Try again, or go back.
                     </p>
                     <button
                         className="btn-back"
-                        onClick={() => window.history.back()}
+                        onClick={() => reset()}
                     >
-                        Back
+                        Try Again
                     </button>
                 </div>
             </body>

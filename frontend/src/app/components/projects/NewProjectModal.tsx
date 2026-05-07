@@ -59,7 +59,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
             resetForm();
             onClose();
         } catch (err: unknown) {
-            setError((err as Error).message || "Failed to create project");
+            setError((err as Error).message || "Could not create the project. Try again.");
         } finally {
             setLoading(false);
         }
@@ -151,7 +151,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                                     loading={dirLoading}
                                     selectedIds={selectedDocIds}
                                     onChange={setSelectedDocIds}
-                                    emptyMessage="No existing documents"
+                                    emptyMessage="No documents yet. Upload a PDF or Word document below to add one."
                                 />
 
                         </div>
@@ -193,7 +193,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                                 disabled={!name.trim() || loading}
                                 className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-40 transition-colors"
                             >
-                                {loading ? "Creating…" : "Create project"}
+                                {loading ? "Creating…" : "Create Project"}
                             </button>
                         </div>
                     </div>

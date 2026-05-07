@@ -558,8 +558,8 @@ function HistoryDropdown({
                     <p className="px-3 py-2 text-xs text-gray-400">
                         {chats.filter((c) => c.id !== currentChatId).length ===
                         0
-                            ? "No previous chats."
-                            : "No matches."}
+                            ? "No earlier chats yet."
+                            : "Nothing matched that search."}
                     </p>
                 ) : (
                     filtered.map((chat) => {
@@ -1274,7 +1274,7 @@ export function TRChatPanel({
                                     type: "content" as const,
                                     text: isAbort
                                         ? ""
-                                        : "An error occurred. Please try again.",
+                                        : "Something went wrong. Try asking again.",
                                 },
                             ],
                         };

@@ -210,7 +210,7 @@ function ApiKeyField({
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } else {
-            alert(`Failed to save ${label}.`);
+            alert(`Could not save your ${label}. Try again.`);
         }
     };
 

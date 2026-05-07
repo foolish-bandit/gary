@@ -182,7 +182,7 @@ export function AddProjectDocsModal({
                         </div>
                     ) : filtered.length === 0 ? (
                         <p className="text-center text-sm text-gray-400 py-8">
-                            {q ? "No matches found" : "No documents in this project"}
+                            {q ? "Nothing matched that search. Try a document title." : "No documents in this project yet. Upload a PDF or Word document to add one."}
                         </p>
                     ) : (
                         <div className="rounded-sm border border-gray-100 overflow-hidden">
@@ -268,7 +268,7 @@ export function AddProjectDocsModal({
                             ) : (
                                 <Upload className="h-3.5 w-3.5" />
                             )}
-                            {uploading ? "Uploading…" : "Upload"}
+                            {uploading ? "Uploading your document…" : "Upload"}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">

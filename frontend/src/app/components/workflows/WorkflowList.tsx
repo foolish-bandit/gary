@@ -441,41 +441,42 @@ export function WorkflowList() {
                                 <>
                                     <Library className="h-8 w-8 text-gray-300 mb-4" />
                                     <p className="text-2xl font-medium font-serif text-gray-900">
-                                        Custom Workflows
+                                        No custom workflows yet
                                     </p>
                                     <p className="mt-1 text-xs text-gray-400 text-left">
-                                        Build reusable prompts and tabular
-                                        review templates tailored to your
-                                        practice.
+                                        Save your own drafting and review
+                                        templates so you can reuse them on
+                                        every matter.
                                     </p>
                                     <button
                                         onClick={() => setNewModalOpen(true)}
                                         className="mt-4 inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 transition-colors shadow-md"
                                     >
-                                        + Create New
+                                        + Create Workflow
                                     </button>
                                 </>
                             ) : activeTab === "hidden" ? (
                                 <>
                                     <Library className="h-8 w-8 text-gray-300 mb-4" />
                                     <p className="text-2xl font-medium font-serif text-gray-900">
-                                        Hidden Workflows
+                                        No hidden workflows
                                     </p>
                                     <p className="mt-1 text-xs text-gray-400 text-left">
-                                        Built-in workflows you've hidden will
-                                        appear here. You can unhide them at any
-                                        time.
+                                        Built-in workflows you hide will appear
+                                        here. You can unhide them at any time.
                                     </p>
                                 </>
                             ) : (
                                 <>
                                     <Library className="h-8 w-8 text-gray-300 mb-4" />
                                     <p className="text-2xl font-medium font-serif text-gray-900">
-                                        Workflows
+                                        No workflows yet
                                     </p>
                                     <p className="mt-1 text-xs text-gray-400 text-left">
-                                        Automate document analysis with reusable
-                                        prompts and tabular review templates.
+                                        Workflows are reusable templates for
+                                        drafting and reviewing legal
+                                        documents — pick one to run it on a
+                                        document.
                                     </p>
                                 </>
                             )}

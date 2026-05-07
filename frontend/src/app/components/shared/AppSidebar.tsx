@@ -218,7 +218,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                                     shouldAnimate ? "sidebar-fade-in-2" : ""
                                 }`}
                             >
-                                No chats yet
+                                No chats yet. Ask Gary a question to start one.
                             </div>
                         ) : (
                             <div
