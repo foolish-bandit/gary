@@ -121,7 +121,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
             description:
                 "Draft letters, emails, memos, clauses, and summaries.",
             Icon: FileSignature,
-            onClick: () => router.push("/workflows"),
+            onClick: () => router.push("/draft"),
         },
     ];
 
