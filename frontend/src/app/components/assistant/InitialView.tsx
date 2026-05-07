@@ -113,7 +113,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
             description:
                 "Review a contract for key terms, risks, and missing clauses.",
             Icon: Table2,
-            onClick: () => router.push("/tabular-reviews"),
+            onClick: () => router.push("/review"),
         },
         {
             key: "draft",
