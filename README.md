@@ -1,6 +1,8 @@
-# Mike
+# GaryOSS
 
-Open-source release containing the Mike frontend and backend.
+A private, hosted legal AI workspace for one lawyer or small firm. Upload legal documents, ask questions, and get cited answers without managing API keys.
+
+Open-source release containing the GaryOSS frontend and backend.
 
 ## Contents
 
