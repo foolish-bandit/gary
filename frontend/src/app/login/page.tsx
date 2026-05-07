@@ -15,6 +15,8 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const isDevBypassEnabled =
+        process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
 
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
@@ -103,6 +105,12 @@ export default function LoginPage() {
                                 className="w-full"
                             />
                         </div>
+
+                        {isDevBypassEnabled && (
+                            <div className="text-amber-800 text-sm bg-amber-50 border border-amber-200 p-3 rounded">
+                                Dev auth bypass is enabled. You can continue directly to Gary.
+                            </div>
+                        )}
 
                         {error && (
                             <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
