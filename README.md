@@ -75,6 +75,11 @@ npm run cf:deploy
 publishes it to Cloudflare Workers. Use `npm run cf:preview` to preview the
 built worker locally.
 
+The Express backend is **not** Workers-compatible (it uses Node-only APIs and
+shells out to LibreOffice). Deploy it to Railway or Render — see
+[`backend/DEPLOY.md`](backend/DEPLOY.md) for install/build/start commands,
+required environment variables, and a post-deploy smoke test.
+
 ## License
 
 AGPL-3.0-only. See `LICENSE`.
