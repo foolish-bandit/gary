@@ -8,6 +8,7 @@ import {
     MessageSquare,
     Table2,
     Upload,
+    Lightbulb,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -126,6 +127,15 @@ export function InitialView({ onSubmit }: InitialViewProps) {
             Icon: FileSignature,
             onClick: () => router.push("/draft"),
         },
+        {
+            key: "explain",
+            title: "Explain This",
+            description:
+                "Break down confusing legal language into plain English.",
+            Icon: Lightbulb,
+            onClick: () => router.push("/explain"),
+        },
+
     ];
 
     return (
@@ -172,7 +182,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
                     </div>
 
                     <div
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6"
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
                         aria-label="What would you like to do?"
                     >
                         {actions.map(
