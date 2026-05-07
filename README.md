@@ -10,6 +10,14 @@ Open-source release containing the GaryOSS frontend and backend.
 - `backend/` - Express API, Supabase access, document processing, and migrations
 - `backend/migrations/000_one_shot_schema.sql` - one-shot Supabase schema for fresh databases
 
+
+## Handoff Docs
+
+- [docs/HANDOFF.md](docs/HANDOFF.md)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/DEPLOYMENT_STATUS.md](docs/DEPLOYMENT_STATUS.md)
+- [docs/ROADMAP.md](docs/ROADMAP.md)
+
 ## Setup
 
 Install dependencies:
