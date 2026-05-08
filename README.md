@@ -17,7 +17,9 @@ Open-source release containing the GaryOSS frontend and backend.
 
 - [docs/HANDOFF.md](docs/HANDOFF.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [docs/DEPLOYMENT_STATUS.md](docs/DEPLOYMENT_STATUS.md)
+- [docs/RAILWAY_BACKEND_SETUP.md](docs/RAILWAY_BACKEND_SETUP.md)
 - [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## Setup
