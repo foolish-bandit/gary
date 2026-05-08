@@ -2,7 +2,7 @@
 
 # GaryOSS
 
-A private, hosted legal AI workspace. Upload legal documents, ask questions, and get cited answers without managing API keys.
+Forked from [Mike](github.com/willchen96/mike). Like Mike, this is a private, hosted legal AI workspace. However, Gary is aimed at attorneys who are less tech savvy. You can do the usual upload of legal documents, ask questions, and get cited answers --- but you won't be managing API keys.
 
 Open-source release containing the GaryOSS frontend and backend.
 
