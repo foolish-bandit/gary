@@ -265,10 +265,11 @@ function Step1({
             <h2 className="text-base font-medium text-gray-900 mb-1">
                 Choose or upload a contract
             </h2>
-            <p className="text-xs text-gray-500 mb-4">
-                Pick a contract from your documents, or upload a new PDF or
-                Word document.
-            </p>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Pick a contract from your documents, or upload a new PDF or
+                        Word document. Gary can cite findings only when a
+                        source document is selected.
+                    </p>
 
             <div className="rounded-xl border border-gray-200 bg-white">
                 <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
@@ -373,7 +374,7 @@ function Step2({
                 <p className="text-xs font-medium text-gray-700 mb-3">
                     Gary will look for
                 </p>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-700">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-700">
                     {REVIEW_TOPICS.map((topic) => (
                         <li
                             key={topic}
@@ -383,8 +384,12 @@ function Step2({
                             <span>{topic}</span>
                         </li>
                     ))}
-                </ul>
-            </div>
+                    </ul>
+                    <p className="mt-3 text-xs text-gray-500">
+                        Each finding should point back to the contract so you
+                        can check the source.
+                    </p>
+                </div>
 
             {/* Citation note */}
             <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-white p-4 mb-6">

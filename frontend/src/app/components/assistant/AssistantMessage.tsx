@@ -987,6 +987,75 @@ function MarkdownContent({
     );
 }
 
+function CitationExpectationNote({
+    citations,
+    onCitationClick,
+}: {
+    citations: MikeCitationAnnotation[];
+    onCitationClick?: (c: MikeCitationAnnotation) => void;
+}) {
+    if (citations.length === 0) {
+        return (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                No source citation shown. Treat this answer as unverified.
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-medium text-gray-700">Citations</p>
+                <p className="text-[11px] text-gray-500">
+                    Check cited sources before relying on an answer.
+                </p>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+                {citations.slice(0, 6).map((citation, index) => {
+                    const label = `${citation.filename} - ${formatCitationPage(citation)}`;
+                    const body = (
+                        <>
+                            <span className="font-medium text-gray-700">
+                                {index + 1}
+                            </span>
+                            <span className="max-w-[220px] truncate">
+                                {label}
+                            </span>
+                        </>
+                    );
+                    if (onCitationClick) {
+                        return (
+                            <button
+                                key={`${citation.ref}-${citation.document_id}-${citation.page}-${index}`}
+                                type="button"
+                                onClick={() => onCitationClick(citation)}
+                                title={displayCitationQuote(citation)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-600 hover:bg-gray-100"
+                            >
+                                {body}
+                            </button>
+                        );
+                    }
+                    return (
+                        <div
+                            key={`${citation.ref}-${citation.document_id}-${citation.page}-${index}`}
+                            title={displayCitationQuote(citation)}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-600"
+                        >
+                            {body}
+                        </div>
+                    );
+                })}
+                {citations.length > 6 && (
+                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-500">
+                        +{citations.length - 6} more
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -1123,6 +1192,18 @@ export function AssistantMessage({
             );
         }
     }
+    const answerHasContent = events
+        ? events.some((event) => event.type === "content" && event.text.trim())
+        : _content.trim().length > 0;
+    const displayedCitationKeys = new Set<string>();
+    const citationSource =
+        citationsList.length > 0 ? citationsList : annotations;
+    const displayedCitations = citationSource.filter((citation) => {
+        const key = `${citation.ref}-${citation.document_id}-${citation.page}-${citation.quote}`;
+        if (displayedCitationKeys.has(key)) return false;
+        displayedCitationKeys.add(key);
+        return true;
+    });
     const handleCopy = async () => {
         try {
             let html = "";
@@ -1479,6 +1560,12 @@ export function AssistantMessage({
                                     />
                                 );
                             })()}
+                        {!isStreaming && answerHasContent && !isError && (
+                            <CitationExpectationNote
+                                citations={displayedCitations}
+                                onCitationClick={onCitationClick}
+                            />
+                        )}
                     </div>
                 ) : null}
 

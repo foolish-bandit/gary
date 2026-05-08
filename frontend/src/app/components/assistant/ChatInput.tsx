@@ -234,6 +234,9 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
                             className="w-full resize-none text-sm overflow-hidden border-0 text-base p-0 bg-transparent outline-none placeholder:text-gray-400 leading-6 max-h-48"
                         />
                     </div>
+                    <p className="px-4 pt-2 text-[11px] leading-4 text-gray-400">
+                        Gary should cite the document so you can check the answer.
+                    </p>
 
                     {/* Controls */}
                     <div className="flex items-center justify-between md:p-2.5 p-2">

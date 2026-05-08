@@ -106,7 +106,7 @@ export function InitialView({ onSubmit }: InitialViewProps) {
         {
             key: "upload",
             title: "Upload Document",
-            description: "Upload a legal document to get started.",
+            description: "Upload a document first so Gary can cite the source.",
             Icon: uploading ? Loader2 : Upload,
             onClick: handleUploadClick,
             busy: uploading,
@@ -223,6 +223,12 @@ export function InitialView({ onSubmit }: InitialViewProps) {
                         onProjectsClick={() => setProjectModalOpen(true)}
                         hideModelToggle
                     />
+
+                    <p className="mt-3 text-center text-xs text-gray-500">
+                        Answers are most useful when tied to uploaded documents.
+                        You can ask general questions, but document-backed
+                        answers are easier to verify.
+                    </p>
 
                     {uploadError && (
                         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
