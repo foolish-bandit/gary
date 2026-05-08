@@ -25,7 +25,7 @@ const NAME_COL_W = "w-[300px] shrink-0";
 
 const TABS: { id: Tab; label: string }[] = [
     { id: "all", label: "All Reviews" },
-    { id: "in-project", label: "In Project" },
+    { id: "in-project", label: "In Matter" },
     { id: "standalone", label: "Standalone" },
 ];
 
@@ -198,7 +198,7 @@ export default function TabularReviewsPage() {
                         : "text-gray-500 hover:text-gray-700"
                 }`}
             >
-                {selectedProject ? selectedProject.name : "Filter by project"}
+                {selectedProject ? selectedProject.name : "Filter by matter"}
                 <ChevronDown className="h-3 w-3" />
             </button>
             {filterOpen && (
@@ -210,7 +210,7 @@ export default function TabularReviewsPage() {
                         }}
                         className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
                     >
-                        All Projects
+                        All Matters
                         {!projectFilter && (
                             <Check className="h-3.5 w-3.5 text-gray-400" />
                         )}
@@ -317,7 +317,7 @@ export default function TabularReviewsPage() {
                     </div>
                     <div className="ml-auto w-24 shrink-0">Columns</div>
                     <div className="w-24 shrink-0">Documents</div>
-                    <div className="w-40 shrink-0">Project</div>
+                    <div className="w-40 shrink-0">Matter</div>
                     <div className="w-32 shrink-0">Created</div>
                     <div className="w-8 shrink-0" />
                 </div>

@@ -59,7 +59,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
             resetForm();
             onClose();
         } catch (err: unknown) {
-            setError((err as Error).message || "Could not create the project. Try again.");
+            setError((err as Error).message || "Could not create the matter. Try again.");
         } finally {
             setLoading(false);
         }
@@ -86,9 +86,9 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 pt-5 pb-2">
                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <span>Projects</span>
+                        <span>Matters</span>
                         <span>›</span>
-                        <span>New project</span>
+                        <span>New matter</span>
                     </div>
                     <button
                         onClick={handleClose}
@@ -105,7 +105,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Project name"
+                            placeholder="Matter name"
                             className="w-full text-2xl font-serif text-gray-800 placeholder-gray-300 focus:outline-none bg-transparent"
                             autoFocus
                         />
@@ -151,7 +151,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                                     loading={dirLoading}
                                     selectedIds={selectedDocIds}
                                     onChange={setSelectedDocIds}
-                                    emptyMessage="No documents yet. Upload a PDF or Word document below to add one."
+                                    emptyMessage="No documents yet. Upload a PDF or Word document to start asking questions about it."
                                 />
 
                         </div>
@@ -177,7 +177,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
                             >
                                 <Upload className="h-3.5 w-3.5" />
-                                Upload files{pendingFiles.length > 0 ? ` (${pendingFiles.length})` : ""}
+                                Upload documents{pendingFiles.length > 0 ? ` (${pendingFiles.length})` : ""}
                             </button>
                         </div>
                         <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export function NewProjectModal({ open, onClose, onCreated }: Props) {
                                 disabled={!name.trim() || loading}
                                 className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-40 transition-colors"
                             >
-                                {loading ? "Creating…" : "Create Project"}
+                                {loading ? "Creating…" : "Create Matter"}
                             </button>
                         </div>
                     </div>

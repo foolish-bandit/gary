@@ -108,7 +108,7 @@ export function UploadNewVersionModal({ open, onClose, doc, onSubmit }: Props) {
                     </div>
                     {stagedFile && (
                         <div className="mt-2 text-xs text-gray-500 truncate">
-                            New Version File:{" "}
+                            New version document:{" "}
                             <span className="text-gray-700">
                                 {stagedFile.name}
                             </span>
@@ -132,7 +132,7 @@ export function UploadNewVersionModal({ open, onClose, doc, onSubmit }: Props) {
                             className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                         >
                             <Upload className="h-3.5 w-3.5" />
-                            {stagedFile ? "Change file" : "Upload"}
+                            {stagedFile ? "Change document" : "Upload"}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">

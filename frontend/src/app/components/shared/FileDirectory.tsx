@@ -49,7 +49,7 @@ export function FileDirectory({
     onChange,
     allowMultiple = true,
     forceExpanded = false,
-    emptyMessage = "No documents yet. Upload a PDF or Word document to get started.",
+    emptyMessage = "No documents yet. Upload a PDF or Word document to start asking questions about it.",
     heading = "Documents",
     onDelete,
 }: FileDirectoryProps) {
@@ -228,7 +228,7 @@ export function FileDirectory({
                 {standaloneDocs.length > 0 && directoryProjects.length > 0 && (
                     <div className="border-t border-gray-100 py-2 px-2">
                         <p className="text-xs font-medium text-gray-400">
-                            Projects
+                            Matters
                         </p>
                     </div>
                 )}

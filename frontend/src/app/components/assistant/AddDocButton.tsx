@@ -93,7 +93,7 @@ export function AddDocButton({ onSelectDoc, onBrowseAll, selectedDocIds = [] }: 
                             <Upload className="h-4 w-4 mr-2 text-gray-500" />
                         )}
                         <span className="text-sm">
-                            {uploading ? "Uploading…" : "Upload files"}
+                            {uploading ? "Uploading…" : "Upload documents"}
                         </span>
                     </DropdownMenuItem>
                     <DropdownMenuItem

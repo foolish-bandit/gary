@@ -222,7 +222,7 @@ export function AddNewTRModal({
                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
                         {isProjectMode && projectName ? (
                             <>
-                                <span>Projects</span>
+                                <span>Matters</span>
                                 <span>›</span>
                                 <span>
                                     {projectName}
@@ -370,7 +370,7 @@ export function AddNewTRModal({
                                     />
                                 </span>
                                 <span className="text-sm text-gray-600">
-                                    Create under a project
+                                    Create under a matter
                                 </span>
                             </button>
 
@@ -395,7 +395,7 @@ export function AddNewTRModal({
                                                   (selectedProject.cm_number
                                                       ? ` (#${selectedProject.cm_number})`
                                                       : "")
-                                                : "Select project…"}
+                                                : "Select matter…"}
                                         </span>
                                         <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                                     </button>
@@ -403,7 +403,7 @@ export function AddNewTRModal({
                                         <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg overflow-y-auto max-h-48">
                                             {projects.length === 0 ? (
                                                 <p className="px-3 py-2 text-xs text-gray-400">
-                                                    No projects yet. Create one for each client, case, or matter.
+                                                    No matters yet. Create a matter for each client, case, or legal project.
                                                 </p>
                                             ) : (
                                                 projects.map((p) => (
@@ -443,7 +443,7 @@ export function AddNewTRModal({
                         </div>}
 
                         {/* File directory */}
-                        {showDirectory && (
+                        {showDirectory ? (
                             <div className="space-y-2">
                                 <p className="text-xs font-medium text-gray-700">
                                     Select Documents
@@ -467,15 +467,19 @@ export function AddNewTRModal({
                                         loading={directoryLoading}
                                         selectedIds={selectedDocIds}
                                         onChange={setSelectedDocIds}
-                                        heading={isProjectMode ? "Project Documents" : "Documents"}
+                                        heading={isProjectMode ? "Matter Documents" : "Documents"}
                                         emptyMessage={
                                             isProjectMode || underProject
-                                                ? "No documents ready in this project yet. Upload a PDF or Word document."
-                                                : "No documents yet. Upload a PDF or Word document to start."
+                                                ? "No documents yet. Upload a PDF or Word document to start asking questions about it."
+                                                : "No documents yet. Upload a PDF or Word document to start asking questions about it."
                                         }
                                     />
                                 </div>
                             </div>
+                        ) : (
+                            <p className="text-center text-sm text-gray-400 py-8">
+                                Choose a matter before uploading documents.
+                            </p>
                         )}
                     </div>
 
@@ -493,7 +497,7 @@ export function AddNewTRModal({
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={uploading}
+                                disabled={uploading || (underProject && !selectedProjectId)}
                                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                             >
                                 {uploading ? (

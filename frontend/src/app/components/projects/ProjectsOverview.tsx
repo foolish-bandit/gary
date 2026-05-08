@@ -142,7 +142,7 @@ export function ProjectsOverview() {
         setProjects((prev) => prev.filter((p) => !owned.includes(p.id)));
         if (blocked > 0) {
             setOwnerOnlyAction(
-                `delete ${blocked} of the selected projects — only the project owner can delete a project`,
+                `delete ${blocked} of the selected matters — only the matter owner can delete a matter`,
             );
         }
     }
@@ -178,13 +178,13 @@ export function ProjectsOverview() {
             {/* Page header */}
             <div className="flex items-center justify-between px-8 py-4">
                 <h1 className="text-2xl font-medium font-serif text-gray-900">
-                    Projects
+                    Matters
                 </h1>
                 <div className="flex items-center gap-2">
                     <HeaderSearchBtn
                         value={search}
                         onChange={setSearch}
-                        placeholder="Search projects…"
+                        placeholder="Search matters…"
                     />
                     <button
                         onClick={() => setModalOpen(true)}
@@ -224,7 +224,7 @@ export function ProjectsOverview() {
                         Name
                     </div>
                     <div className="ml-auto w-32 shrink-0 text-left">CM</div>
-                    <div className="w-24 shrink-0 text-left">Files</div>
+                    <div className="w-24 shrink-0 text-left">Documents</div>
                     <div className="w-24 shrink-0 text-left">Chats</div>
                     <div className="w-36 shrink-0 text-left">
                         Tabular Reviews
@@ -269,23 +269,24 @@ export function ProjectsOverview() {
                             <>
                                 <FolderOpen className="h-8 w-8 text-gray-300 mb-4" />
                                 <p className="text-2xl font-medium font-serif text-gray-900">
-                                    No projects yet
+                                    No matters yet
                                 </p>
                                 <p className="mt-1 text-xs text-gray-400 max-w-xs">
-                                    Create a project for each client, case, or
-                                    matter. You can then upload documents,
-                                    chat with Gary, and run reviews.
+                                    Create a matter for each client, case, or
+                                    legal project. You can then upload
+                                    documents, ask Gary questions, and run
+                                    reviews.
                                 </p>
                                 <button
                                     onClick={() => setModalOpen(true)}
                                     className="mt-4 inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 transition-colors shadow-md"
                                 >
-                                    + Create Project
+                                    + Create Matter
                                 </button>
                             </>
                         ) : (
                             <p className="text-sm text-gray-400">
-                                No {activeTab} projects yet.
+                                No {activeTab} matters yet.
                             </p>
                         )}
                     </div>
@@ -318,7 +319,7 @@ export function ProjectsOverview() {
                                     />
                                 </div>
 
-                                {/* Project Name */}
+                                {/* Matter Name */}
                                 <div className={`sticky left-8 z-[60] ${NAME_COL_W} p-2 ${rowBg} group-hover:bg-gray-50`}>
                                     {renamingId === project.id ? (
                                         <input
