@@ -77,7 +77,7 @@ function SimpleProjectPicker({
                 }}
                 onFocus={() => setOpen(true)}
                 onBlur={() => setTimeout(() => setOpen(false), 150)}
-                placeholder="Select a project…"
+                placeholder="Select a matter…"
                 className="w-full text-xs text-gray-700 placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 outline-none"
             />
             {selectedId && (
@@ -95,7 +95,7 @@ function SimpleProjectPicker({
                 <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-sm overflow-y-auto max-h-40">
                     {filtered.length === 0 ? (
                         <p className="px-3 py-3 text-xs text-gray-400 text-center">
-                            No projects yet.
+                            No matters yet.
                         </p>
                     ) : (
                         filtered.map((p) => (
@@ -599,7 +599,7 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                             {/* Toggle row */}
                             <div className="px-5 py-3 flex flex-col gap-2 shrink-0">
                                 <span className="text-xs font-medium text-gray-700">
-                                    Create in a project
+                                    Create in a matter
                                 </span>
                                 <Toggle
                                     on={inProject}
@@ -616,7 +616,7 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                 <>
                                     <div className="px-5 pt-1 pb-1 shrink-0">
                                         <p className="text-xs font-medium text-gray-700">
-                                            Select project
+                                            Select matter
                                         </p>
                                     </div>
                                     <div className="px-5 pb-2 shrink-0">
@@ -676,7 +676,7 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                             emptyMessage={
                                                 q
                                                     ? "Nothing matched that search. Try a document title."
-                                                    : "No documents yet. Upload a PDF or Word document to start."
+                                                    : "No documents yet. Upload a PDF or Word document to start asking questions about it."
                                             }
                                         />
                                     </div>
@@ -710,7 +710,7 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                             {/* Toggle stacked */}
                             <div className="px-5 pb-3 flex flex-col gap-2 shrink-0">
                                 <span className="text-xs font-medium text-gray-700">
-                                    Create in a project
+                                    Create in a matter
                                 </span>
                                 <Toggle
                                     on={inProject}
@@ -728,7 +728,7 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                 <>
                                     <div className="px-5 pt-1 pb-1 shrink-0">
                                         <p className="text-xs font-medium text-gray-700">
-                                            Select Project
+                                            Select Matter
                                         </p>
                                     </div>
                                     <div className="px-5 pb-2 shrink-0">
@@ -798,8 +798,8 @@ export function DisplayWorkflowModal({ workflows, workflow, onClose }: Props) {
                                         q
                                             ? "Nothing matched that search. Try a document title."
                                             : inProject
-                                              ? "No documents in this project yet. Upload a PDF or Word document to add one."
-                                              : "No documents yet. Upload a PDF or Word document to start."
+                                              ? "No documents yet. Upload a PDF or Word document to start asking questions about it."
+                                              : "No documents yet. Upload a PDF or Word document to start asking questions about it."
                                     }
                                 />
                             </div>

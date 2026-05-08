@@ -22,7 +22,7 @@ import { listProjects } from "@/app/lib/mikeApi";
 
 const NAV_ITEMS = [
     { href: "/assistant", label: "Ask Gary", icon: MessageSquare },
-    { href: "/projects", label: "Projects", icon: FolderOpen },
+    { href: "/projects", label: "Matters", icon: FolderOpen },
     { href: "/tabular-reviews", label: "Tabular Review", icon: Table2 },
     { href: "/workflows", label: "Workflows", icon: Library },
 ];

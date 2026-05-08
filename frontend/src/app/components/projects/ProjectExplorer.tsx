@@ -353,7 +353,7 @@ export function ProjectExplorer({
 
             {/* Empty state */}
             {documents.length === 0 && folders.length === 0 && creatingIn === undefined && (
-                <li className="px-4 py-2 text-xs text-gray-400">No documents in this project yet. Upload a PDF or Word document to start asking questions about it.</li>
+                <li className="px-4 py-2 text-xs text-gray-400">No documents yet. Upload a PDF or Word document to start asking questions about it.</li>
             )}
 
             {/* Context menu */}
@@ -415,7 +415,7 @@ export function ProjectExplorer({
                             }}
                         >
                             <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                            Delete file
+                            Delete document
                         </button>
                     )}
                 </div>

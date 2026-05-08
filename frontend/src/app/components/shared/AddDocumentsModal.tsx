@@ -254,7 +254,7 @@ export function AddDocumentsModal({
                         emptyMessage={
                             q
                                 ? "Nothing matched that search. Try a document title."
-                                : "No documents yet. Upload a PDF or Word document to start."
+                                : "No documents yet. Upload a PDF or Word document to start asking questions about it."
                         }
                         onDelete={handleDelete}
                     />

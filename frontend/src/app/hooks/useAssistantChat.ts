@@ -816,7 +816,7 @@ export function useAssistantChat({
                     titleParts.push(`Workflow: ${message.workflow.title}`);
                 if (message.files?.length)
                     titleParts.push(
-                        `Files: ${message.files.map((f) => f.filename).join(", ")}`,
+                        `Documents: ${message.files.map((f) => f.filename).join(", ")}`,
                     );
                 void generateTitle(finalChatIdForTitle, titleParts.join("\n"));
             }

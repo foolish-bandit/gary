@@ -758,7 +758,7 @@ export default function ProjectAssistantChatPage({ params }: Props) {
                         onClick={() => router.push("/projects")}
                         className="text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                        Projects
+                        Matters
                     </button>
                     <span className="text-gray-300">›</span>
                     {project ? (
@@ -1104,7 +1104,7 @@ export default function ProjectAssistantChatPage({ params }: Props) {
                                     </p>
                                     <p className="font-serif text-base text-gray-500">
                                         Pro tip: Drag a document from the
-                                        Project Explorer to the Assistant to
+                                        Matter Documents to the Assistant to
                                         direct it to read or edit.
                                     </p>
                                 </div>
@@ -1125,7 +1125,7 @@ export default function ProjectAssistantChatPage({ params }: Props) {
                     <div className="h-10 flex items-center gap-2 px-4 border-b border-gray-200 shrink-0">
                         <MikeIcon size={16} />
                         <span className="text-xs text-gray-700">
-                            Project Assistant
+                            Matter Assistant
                         </span>
                     </div>
 
