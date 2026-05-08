@@ -1,3 +1,5 @@
+## FORKED FROM [WILL CHEN](github.com/willchen96)'S [MIKE](github.com/willchen96/mike)
+
 # GaryOSS
 
 A private, hosted legal AI workspace. Upload legal documents, ask questions, and get cited answers without managing API keys.
