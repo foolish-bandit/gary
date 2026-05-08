@@ -242,6 +242,11 @@ function TRAssistantMessage({
     );
 
     const events = msg.events ?? [];
+    const answerHasContent = events.some(
+        (event) => event.type === "content" && event.text.trim(),
+    );
+    const citationSource =
+        citationsList.length > 0 ? citationsList : annotations;
 
     // Group consecutive non-content events together so they share a single
     // PreResponseWrapper. Content events render between wrappers.
@@ -409,6 +414,54 @@ function TRAssistantMessage({
                     })}
                 </div>
             )}
+            {!msg.isStreaming && answerHasContent && (
+                <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                    {citationSource.length > 0 ? (
+                        <>
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-medium text-gray-700">
+                                    Citations
+                                </p>
+                                <p className="text-[11px] text-gray-500">
+                                    Check cited sources before relying on an answer.
+                                </p>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {citationSource.slice(0, 6).map((citation, index) => (
+                                    <button
+                                        key={`${citation.ref}-${citation.col_index}-${citation.row_index}-${index}`}
+                                        type="button"
+                                        onClick={() =>
+                                            onCitationClick(
+                                                citation.col_index,
+                                                citation.row_index,
+                                            )
+                                        }
+                                        title={citation.quote}
+                                        className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-100"
+                                    >
+                                        <span className="font-medium text-gray-700">
+                                            {index + 1}
+                                        </span>
+                                        <span className="max-w-[160px] truncate">
+                                            {citation.doc_name}
+                                        </span>
+                                    </button>
+                                ))}
+                                {citationSource.length > 6 && (
+                                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-500">
+                                        +{citationSource.length - 6} more
+                                    </span>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-xs text-amber-800">
+                            No source citation shown. Treat this answer as unverified.
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
@@ -514,6 +567,9 @@ function TRChatInput({
                         )}
                     </button>
                 </div>
+                <p className="px-3 text-[11px] leading-4 text-gray-400">
+                    Gary should cite the document so you can check the answer.
+                </p>
             </div>
         </div>
     );

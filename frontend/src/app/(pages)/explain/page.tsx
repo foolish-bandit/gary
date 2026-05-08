@@ -66,7 +66,8 @@ export default function ExplainThisPage() {
                         Paste legal language, a clause, or a confusing
                         paragraph. Gary will explain what it says, why it
                         matters, what could go wrong, and how it might be
-                        revised.
+                        revised. Pasted text explanations may not have document
+                        citations unless tied to an uploaded document.
                     </p>
                 </div>
 
@@ -114,6 +115,11 @@ export default function ExplainThisPage() {
                         <Lightbulb className="h-4 w-4" />
                         {starting ? "Starting…" : "Explain This"}
                     </button>
+
+                    <p className="text-xs text-gray-500">
+                        Upload a document first when you need Gary to cite the
+                        source.
+                    </p>
 
                     {error && (
                         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">

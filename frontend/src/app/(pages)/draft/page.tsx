@@ -231,6 +231,7 @@ export default function DraftSomethingPage() {
                     <p className="text-sm text-gray-500 leading-relaxed">
                         Pick the kind of writing you need help with, then tell
                         Gary the audience, the goal, and the important facts.
+                        Drafts must be reviewed before use.
                     </p>
                 </div>
 
@@ -516,9 +517,9 @@ function Step2({
             {/* Caution */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 mb-6">
                 <p className="text-sm text-gray-600 leading-relaxed">
-                    Review the draft before using it. Gary may help organize
-                    and revise, but the lawyer is responsible for the final
-                    work.
+                    Drafts must be reviewed before use. If you attach a
+                    document, check any cited source before relying on the
+                    draft.
                 </p>
             </div>
 

@@ -183,7 +183,7 @@ export const TRTable = forwardRef<TRTableHandle, Props>(function TRTable(
                         Tabular Review
                     </p>
                     <p className="mt-1 text-xs text-gray-400 text-left">
-                        Add columns and documents to get started.
+                        Add columns and documents to get cited findings.
                     </p>
                     <div className="mt-4 flex items-center gap-2">
                         <button
