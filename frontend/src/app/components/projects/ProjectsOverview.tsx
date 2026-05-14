@@ -50,10 +50,6 @@ export function ProjectsOverview() {
     }, []);
 
     useEffect(() => {
-        setSelectedIds([]);
-    }, [activeTab]);
-
-    useEffect(() => {
         function handleClick(e: MouseEvent) {
             if (
                 actionsRef.current &&
@@ -198,7 +194,10 @@ export function ProjectsOverview() {
             <ToolbarTabs
                 tabs={tabs}
                 active={activeTab}
-                onChange={setActiveTab}
+                onChange={(next) => {
+                    setActiveTab(next);
+                    setSelectedIds([]);
+                }}
                 actions={toolbarActions}
             />
 

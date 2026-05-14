@@ -38,7 +38,6 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
     const { chats, currentChatId, setCurrentChatId } = useChatHistoryContext();
     const router = useRouter();
     const pathname = usePathname();
-    const [shouldAnimate, setShouldAnimate] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [historyCollapsed, setHistoryCollapsed] = useState(false);
     const [projectNames, setProjectNames] = useState<Record<string, string>>(
@@ -56,9 +55,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             .catch(() => {});
     }, [user]);
 
-    useEffect(() => {
-        if (!isOpen) setShouldAnimate(true);
-    }, [isOpen]);
+    const shouldAnimate = !isOpen;
 
     useEffect(() => {
         const handleClickOutside = () => setIsDropdownOpen(false);

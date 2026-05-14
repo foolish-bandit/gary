@@ -11,11 +11,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { isModelAvailable } from "@/app/lib/modelAvailability";
+import type { ProviderAvailability } from "@/app/lib/mikeApi";
 
 export interface ModelOption {
     id: string;
     label: string;
-    group: "Anthropic" | "Google";
+    group: "Anthropic" | "Google" | "OpenAI";
 }
 
 export const MODELS: ModelOption[] = [
@@ -23,29 +24,28 @@ export const MODELS: ModelOption[] = [
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", group: "Anthropic" },
     { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", group: "Google" },
     { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", group: "Google" },
+    { id: "gpt-5.5", label: "GPT-5.5", group: "OpenAI" },
+    { id: "gpt-5.4-mini", label: "GPT-5.4 Mini", group: "OpenAI" },
 ];
 
 export const DEFAULT_MODEL_ID = "gemini-3-flash-preview";
 
 export const ALLOWED_MODEL_IDS = new Set(MODELS.map((m) => m.id));
 
-const GROUP_ORDER: ModelOption["group"][] = ["Anthropic", "Google"];
+const GROUP_ORDER: ModelOption["group"][] = ["Anthropic", "Google", "OpenAI"];
 
 interface Props {
     value: string;
     onChange: (id: string) => void;
-    apiKeys?: {
-        claudeApiKey: string | null;
-        geminiApiKey: string | null;
-    };
+    providerAvailability?: ProviderAvailability | null;
 }
 
-export function ModelToggle({ value, onChange, apiKeys }: Props) {
+export function ModelToggle({ value, onChange, providerAvailability }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const selected = MODELS.find((m) => m.id === value);
     const selectedLabel = selected?.label ?? "Assistant";
-    const selectedAvailable = apiKeys
-        ? isModelAvailable(value, apiKeys)
+    const selectedAvailable = providerAvailability
+        ? isModelAvailable(value, providerAvailability)
         : true;
 
     return (
@@ -56,7 +56,7 @@ export function ModelToggle({ value, onChange, apiKeys }: Props) {
                     className={`flex items-center gap-1.5 rounded-lg px-2 h-8 text-sm transition-colors cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-gray-700 ${isOpen ? "bg-gray-100 text-gray-700" : ""}`}
                     title={
                         !selectedAvailable
-                            ? "No key set for this assistant"
+                            ? "This assistant is not configured on the server"
                             : "Choose assistant"
                     }
                 >
@@ -80,14 +80,17 @@ export function ModelToggle({ value, onChange, apiKeys }: Props) {
                                 {group}
                             </DropdownMenuLabel>
                             {items.map((m) => {
-                                const available = apiKeys
-                                    ? isModelAvailable(m.id, apiKeys)
+                                const available = providerAvailability
+                                    ? isModelAvailable(m.id, providerAvailability)
                                     : true;
                                 return (
                                     <DropdownMenuItem
                                         key={m.id}
                                         className="cursor-pointer"
-                                        onSelect={() => onChange(m.id)}
+                                        disabled={!available}
+                                        onSelect={() => {
+                                            if (available) onChange(m.id);
+                                        }}
                                     >
                                         <span
                                             className={`flex-1 ${available ? "" : "text-gray-400"}`}
@@ -97,7 +100,7 @@ export function ModelToggle({ value, onChange, apiKeys }: Props) {
                                         {!available && (
                                             <AlertCircle
                                                 className="h-3.5 w-3.5 text-red-500 ml-1"
-                                                aria-label="No key set"
+                                                aria-label="Assistant unavailable"
                                             />
                                         )}
                                         {m.id === value && available && (

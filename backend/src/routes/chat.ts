@@ -13,6 +13,16 @@ import {
 import { completeText } from "../lib/llm";
 import { getUserApiKeys, getUserModelSettings } from "../lib/userSettings";
 import { checkProjectAccess } from "../lib/access";
+import { isKnownModel } from "../lib/llm/models";
+import { debugLog, errorLog } from "../lib/log";
+import {
+    ensureObject,
+    parseChatMessages,
+    parseOptionalNullableString,
+    parseOptionalString,
+    parseRequiredTrimmedString,
+    ValidationError,
+} from "../lib/validation";
 
 export const chatRouter = Router();
 
@@ -52,7 +62,16 @@ chatRouter.get("/", requireAuth, async (req, res) => {
 // POST /chat/create
 chatRouter.post("/create", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
-    const projectId: string | null = req.body.project_id ?? null;
+    let projectId: string | null = null;
+    try {
+        const body = ensureObject(req.body);
+        projectId = parseOptionalNullableString(body.project_id, "project_id") ?? null;
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
     const db = createServerSupabase();
     const { data, error } = await db
         .from("chats")
@@ -223,9 +242,16 @@ async function hydrateEditStatuses(
 chatRouter.patch("/:chatId", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const { chatId } = req.params;
-    const title = (req.body.title ?? "").trim();
-    if (!title)
-        return void res.status(400).json({ detail: "title is required" });
+    let title: string;
+    try {
+        const body = ensureObject(req.body);
+        title = parseRequiredTrimmedString(body.title, "title");
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
     const db = createServerSupabase();
     const { data, error } = await db
@@ -261,9 +287,16 @@ chatRouter.post("/:chatId/generate-title", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const userEmail = res.locals.userEmail as string | undefined;
     const { chatId } = req.params;
-    const message: string = (req.body.message ?? "").trim();
-    if (!message)
-        return void res.status(400).json({ detail: "message is required" });
+    let message: string;
+    try {
+        const body = ensureObject(req.body);
+        message = parseRequiredTrimmedString(body.message, "message");
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
     const db = createServerSupabase();
     const { data: chat, error } = await db
@@ -308,7 +341,7 @@ chatRouter.post("/:chatId/generate-title", requireAuth, async (req, res) => {
 
         res.json({ title });
     } catch (err) {
-        console.error("[generate-title]", err);
+        errorLog("[generate-title] failed", err);
         res.status(500).json({ detail: "Failed to generate title" });
     }
 });
@@ -316,19 +349,32 @@ chatRouter.post("/:chatId/generate-title", requireAuth, async (req, res) => {
 // POST /chat — streaming
 chatRouter.post("/", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
-    const { messages, chat_id, project_id, model } = req.body as {
-        messages: ChatMessage[];
-        chat_id?: string;
-        project_id?: string;
-        model?: string;
-    };
+    let messages: ChatMessage[];
+    let chat_id: string | undefined;
+    let project_id: string | null | undefined;
+    let model: string | undefined;
+    try {
+        const body = ensureObject(req.body);
+        messages = parseChatMessages(body.messages);
+        chat_id = parseOptionalString(body.chat_id, "chat_id");
+        project_id = parseOptionalNullableString(body.project_id, "project_id");
+        model = parseOptionalString(body.model, "model");
+        if (model && !isKnownModel(model)) {
+            return void res.status(400).json({ detail: "model is invalid" });
+        }
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
-    console.log("[chat/stream] incoming request", {
+    debugLog("[chat/stream] incoming request", {
         userId,
-        chat_id,
-        project_id,
-        model,
-        messageCount: messages?.length,
+        chatId: chat_id ?? null,
+        projectId: project_id ?? null,
+        model: model ?? null,
+        messageCount: messages.length,
     });
 
     const userEmail = res.locals.userEmail as string | undefined;
@@ -378,7 +424,7 @@ chatRouter.post("/", requireAuth, async (req, res) => {
             .select("id, title")
             .single();
         if (error || !newChat) {
-            console.error("[chat/stream] failed to create chat", error);
+            errorLog("[chat/stream] failed to create chat", error);
             return void res
                 .status(500)
                 .json({ detail: "Failed to create chat" });
@@ -387,7 +433,7 @@ chatRouter.post("/", requireAuth, async (req, res) => {
         chatTitle = newChat.title;
     }
 
-    console.log("[chat/stream] resolved chatId", chatId);
+    debugLog("[chat/stream] resolved chat", { chatId });
 
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (lastUser) {
@@ -420,7 +466,7 @@ chatRouter.post("/", requireAuth, async (req, res) => {
 
     const workflowStore = await buildWorkflowStore(userId, userEmail, db);
 
-    console.log("[chat/stream] starting LLM stream", {
+    debugLog("[chat/stream] starting LLM stream", {
         apiMessageCount: apiMessages.length,
         docCount: Object.keys(docIndex).length,
         workflowCount: Object.keys(workflowStore).length,
@@ -452,7 +498,7 @@ chatRouter.post("/", requireAuth, async (req, res) => {
             projectId: project_id ?? null,
         });
 
-        console.log("[chat/stream] LLM stream finished", {
+        debugLog("[chat/stream] LLM stream finished", {
             fullTextLen: fullText?.length ?? 0,
             eventCount: events?.length ?? 0,
         });
@@ -472,7 +518,7 @@ chatRouter.post("/", requireAuth, async (req, res) => {
                 .eq("id", chatId);
         }
     } catch (err) {
-        console.error("[chat/stream] error:", err);
+        errorLog("[chat/stream] error", err);
         try {
             write(
                 `data: ${JSON.stringify({ type: "error", message: "Stream error" })}\n\n`,

@@ -2,6 +2,15 @@ import { Router } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth } from "../middleware/auth";
 import { createServerSupabase } from "../lib/supabase";
+import {
+  ensureObject,
+  parseOptionalBoolean,
+  parseOptionalEmailArray,
+  parseOptionalNullableString,
+  parseOptionalString,
+  parseRequiredTrimmedString,
+  ValidationError,
+} from "../lib/validation";
 
 function getAdminClient() {
   return createClient(
@@ -141,30 +150,42 @@ workflowsRouter.get("/", requireAuth, async (req, res) => {
 // POST /workflows
 workflowsRouter.post("/", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
-  const { title, type, prompt_md, columns_config, practice } = req.body as {
-    title: string;
-    type: string;
-    prompt_md?: string;
-    columns_config?: unknown;
-    practice?: string | null;
-  };
-  if (!title?.trim())
-    return void res.status(400).json({ detail: "title is required" });
-  if (!["assistant", "tabular"].includes(type))
+  let title: string;
+  let type: string;
+  let prompt_md: string | null = null;
+  let columns_config: unknown = null;
+  let practice: string | null = null;
+  try {
+    const body = ensureObject(req.body);
+    title = parseRequiredTrimmedString(body.title, "title");
+    type = parseRequiredTrimmedString(body.type, "type");
+    prompt_md =
+      parseOptionalNullableString(body.prompt_md, "prompt_md") ?? null;
+    columns_config = body.columns_config ?? null;
+    practice =
+      parseOptionalNullableString(body.practice, "practice") ?? null;
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
+  if (!["assistant", "tabular"].includes(type)) {
     return void res
       .status(400)
       .json({ detail: "type must be 'assistant' or 'tabular'" });
+  }
 
   const db = createServerSupabase();
   const { data, error } = await db
     .from("workflows")
     .insert({
       user_id: userId,
-      title: title.trim(),
+      title,
       type,
-      prompt_md: prompt_md ?? null,
-      columns_config: columns_config ?? null,
-      practice: practice ?? null,
+      prompt_md,
+      columns_config,
+      practice,
       is_system: false,
     })
     .select("*")
@@ -178,11 +199,33 @@ async function handleWorkflowUpdate(req: import("express").Request, res: import(
   const userEmail = res.locals.userEmail as string | undefined;
   const { workflowId } = req.params;
   const updates: Record<string, unknown> = {};
-  if (req.body.title != null) updates.title = req.body.title;
-  if (req.body.prompt_md != null) updates.prompt_md = req.body.prompt_md;
-  if (req.body.columns_config != null)
-    updates.columns_config = req.body.columns_config;
-  if ("practice" in req.body) updates.practice = req.body.practice ?? null;
+  try {
+    const body = ensureObject(req.body);
+    const title = parseOptionalString(body.title, "title");
+    if (title !== undefined) {
+      const trimmed = title.trim();
+      if (!trimmed) {
+        return void res.status(400).json({ detail: "title is required" });
+      }
+      updates.title = trimmed;
+    }
+    if ("prompt_md" in body) {
+      updates.prompt_md =
+        parseOptionalNullableString(body.prompt_md, "prompt_md") ?? null;
+    }
+    if ("columns_config" in body) {
+      updates.columns_config = body.columns_config ?? null;
+    }
+    if ("practice" in body) {
+      updates.practice =
+        parseOptionalNullableString(body.practice, "practice") ?? null;
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
   const db = createServerSupabase();
   const access = await resolveWorkflowAccess(workflowId, userId, userEmail, db);
@@ -246,9 +289,16 @@ workflowsRouter.get("/hidden", requireAuth, async (req, res) => {
 // POST /workflows/hidden
 workflowsRouter.post("/hidden", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
-  const { workflow_id } = req.body as { workflow_id: string };
-  if (!workflow_id?.trim())
-    return void res.status(400).json({ detail: "workflow_id is required" });
+  let workflow_id: string;
+  try {
+    const body = ensureObject(req.body);
+    workflow_id = parseRequiredTrimmedString(body.workflow_id, "workflow_id");
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
   const db = createServerSupabase();
   const { error } = await db
     .from("hidden_workflows")
@@ -335,9 +385,21 @@ workflowsRouter.delete("/:workflowId/shares/:shareId", requireAuth, async (req, 
 workflowsRouter.post("/:workflowId/share", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
   const { workflowId } = req.params;
-  const { emails, allow_edit } = req.body as { emails: string[]; allow_edit: boolean };
+  let emails: string[];
+  let allow_edit = false;
+  try {
+    const body = ensureObject(req.body);
+    emails =
+      parseOptionalEmailArray(body.emails, "emails", { maxItems: 200 }) ?? [];
+    allow_edit = parseOptionalBoolean(body.allow_edit, "allow_edit") ?? false;
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
-  if (!emails?.length) return void res.status(400).json({ detail: "emails is required" });
+  if (!emails.length) return void res.status(400).json({ detail: "emails is required" });
 
   const db = createServerSupabase();
   // Verify ownership
@@ -353,8 +415,8 @@ workflowsRouter.post("/:workflowId/share", requireAuth, async (req, res) => {
   const rows = emails.map((email: string) => ({
     workflow_id: workflowId,
     shared_by_user_id: userId,
-    shared_with_email: email.trim().toLowerCase(),
-    allow_edit: allow_edit ?? false,
+    shared_with_email: email,
+    allow_edit,
   }));
   // Upsert on (workflow_id, shared_with_email) so re-sharing to the same
   // person updates the existing row instead of stacking duplicates.

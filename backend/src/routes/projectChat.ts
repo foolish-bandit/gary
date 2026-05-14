@@ -13,6 +13,16 @@ import {
 } from "../lib/chatTools";
 import { getUserApiKeys } from "../lib/userSettings";
 import { checkProjectAccess } from "../lib/access";
+import { isKnownModel } from "../lib/llm/models";
+import { errorLog } from "../lib/log";
+import {
+    ensureObject,
+    parseChatMessages,
+    parseOptionalDocumentRef,
+    parseOptionalDocumentRefList,
+    parseOptionalString,
+    ValidationError,
+} from "../lib/validation";
 
 const PROJECT_SYSTEM_PROMPT_EXTRA = `PROJECT CONTEXT:
 You are operating within a project folder that contains a collection of legal documents the user has organised for a single matter. The user's questions will usually refer to one or more documents in this project — your job is to find the relevant files to work on. Use list_documents to see what is available and fetch_documents / read_document to pull in any documents you need before answering.
@@ -29,14 +39,37 @@ projectChatRouter.post("/", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const userEmail = res.locals.userEmail as string | undefined;
     const { projectId } = req.params;
-    const { messages, chat_id, model, displayed_doc, attached_documents } =
-        req.body as {
-            messages: ChatMessage[];
-            chat_id?: string;
-            model?: string;
-            displayed_doc?: { filename: string; document_id: string };
-            attached_documents?: { filename: string; document_id: string }[];
-        };
+    let messages: ChatMessage[];
+    let chat_id: string | undefined;
+    let model: string | undefined;
+    let displayed_doc:
+        | { filename: string; document_id: string }
+        | undefined;
+    let attached_documents:
+        | { filename: string; document_id: string }[]
+        | undefined;
+    try {
+        const body = ensureObject(req.body);
+        messages = parseChatMessages(body.messages);
+        chat_id = parseOptionalString(body.chat_id, "chat_id");
+        model = parseOptionalString(body.model, "model");
+        displayed_doc = parseOptionalDocumentRef(
+            body.displayed_doc,
+            "displayed_doc",
+        );
+        attached_documents = parseOptionalDocumentRefList(
+            body.attached_documents,
+            "attached_documents",
+        );
+        if (model && !isKnownModel(model)) {
+            return void res.status(400).json({ detail: "model is invalid" });
+        }
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
     const db = createServerSupabase();
 
@@ -186,7 +219,7 @@ projectChatRouter.post("/", requireAuth, async (req, res) => {
                 .eq("id", chatId);
         }
     } catch (err) {
-        console.error("[project-chat/stream] error:", err);
+        errorLog("[project-chat/stream] error", err);
         try {
             write(
                 `data: ${JSON.stringify({ type: "error", message: "Stream error" })}\n\n`,

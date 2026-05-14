@@ -215,6 +215,93 @@ What is this document about?
 
 11. If anything fails, check Railway logs and browser DevTools Network tab.
 
+### Automated Smoke Script
+
+The backend now includes an executable staging smoke check:
+
+```bash
+cd backend
+STAGING_API_BASE_URL=https://your-railway-backend-url npm run smoke:staging
+```
+
+Authenticated checks require a valid Supabase access token:
+
+```bash
+cd backend
+STAGING_API_BASE_URL=https://your-railway-backend-url \
+STAGING_BEARER_TOKEN=your-access-token \
+npm run smoke:staging
+```
+
+To verify upload and cleanup too, provide a harmless local PDF or DOCX:
+
+```bash
+cd backend
+STAGING_API_BASE_URL=https://your-railway-backend-url \
+STAGING_BEARER_TOKEN=your-access-token \
+STAGING_UPLOAD_FILE=/absolute/path/to/smoke-test.docx \
+npm run smoke:staging
+```
+
+The script verifies:
+
+- `/health`
+- unauthorized `/chat` rejection
+- authenticated `/user/profile`
+- authenticated `/chat` request validation
+- optional upload, list, and cleanup
+
+### Browser Smoke
+
+The frontend now includes a Playwright smoke harness for deployed UI checks.
+
+Install browsers once on the machine that will run it:
+
+```bash
+cd frontend
+npx playwright install chromium
+```
+
+Run against a deployed frontend with real credentials:
+
+```bash
+cd frontend
+PLAYWRIGHT_BASE_URL=https://your-frontend-url \
+PLAYWRIGHT_EMAIL=lawyer@example.com \
+PLAYWRIGHT_PASSWORD=your-password \
+npm run smoke:ui
+```
+
+Optional upload coverage:
+
+```bash
+cd frontend
+PLAYWRIGHT_BASE_URL=https://your-frontend-url \
+PLAYWRIGHT_EMAIL=lawyer@example.com \
+PLAYWRIGHT_PASSWORD=your-password \
+PLAYWRIGHT_UPLOAD_FILE=/absolute/path/to/smoke-test.docx \
+npm run smoke:ui
+```
+
+For local UI checks with frontend auth bypass enabled:
+
+```bash
+cd frontend
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 \
+PLAYWRIGHT_SKIP_AUTH=true \
+npm run smoke:ui
+```
+
+The browser smoke verifies:
+
+- login shell rendering
+- assistant entry page
+- optional sign-in flow
+- optional upload attach flow
+- Review Contract route
+- Draft Something route
+- Explain This route
+
 ## Common Problems
 
 ### CORS Error

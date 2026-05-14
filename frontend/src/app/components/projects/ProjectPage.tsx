@@ -46,6 +46,7 @@ import {
     type MikeDocumentVersion,
 } from "@/app/lib/mikeApi";
 import type {
+    ColumnConfig,
     MikeDocument,
     MikeFolder,
     MikeProject,
@@ -537,7 +538,8 @@ export function ProjectPage({ projectId }: Props) {
     function toggleFolder(id: string) {
         setExpandedFolderIds((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             return next;
         });
     }
@@ -661,7 +663,7 @@ export function ProjectPage({ projectId }: Props) {
         title: string,
         _projectId?: string,
         documentIds?: string[],
-        columnsConfig?: any,
+        columnsConfig?: ColumnConfig[] | null,
     ) {
         setCreatingReview(true);
         try {
@@ -1578,7 +1580,7 @@ export function ProjectPage({ projectId }: Props) {
                             <div className="flex flex-col items-start py-24 w-full max-w-xs mx-auto">
                                 <MessageSquare className="h-8 w-8 text-gray-300 mb-4" />
                                 <p className="text-2xl font-medium font-serif text-gray-900">Assistant</p>
-                                <p className="mt-1 text-xs text-gray-400 max-w-xs">Ask Gary questions and get cited answers grounded in this matter's documents.</p>
+                                <p className="mt-1 text-xs text-gray-400 max-w-xs">Ask Gary questions and get cited answers grounded in this matter&apos;s documents.</p>
                                 <button onClick={() => handleNewChat()} className="mt-4 inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 transition-colors shadow-md">
                                     + Create New
                                 </button>

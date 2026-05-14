@@ -22,6 +22,7 @@ import {
     mapTRMessages,
     type TRChat,
     type TRCitationAnnotation,
+    type ProviderAvailability,
 } from "@/app/lib/mikeApi";
 import type {
     AssistantEvent,
@@ -186,18 +187,29 @@ function TRResponseStatus({ isActive }: { isActive: boolean }) {
     const wasActiveRef = useRef(false);
 
     useEffect(() => {
+        let frame = 0;
         if (wasActiveRef.current && !isActive) {
-            setShowDone(true);
-            setDoneVisible(true);
+            frame = requestAnimationFrame(() => {
+                setShowDone(true);
+                setDoneVisible(true);
+            });
             const t = setTimeout(() => setDoneVisible(false), 1500);
             wasActiveRef.current = isActive;
-            return () => clearTimeout(t);
+            return () => {
+                if (frame) cancelAnimationFrame(frame);
+                clearTimeout(t);
+            };
         }
         if (!wasActiveRef.current && isActive) {
-            setShowDone(false);
-            setDoneVisible(false);
+            frame = requestAnimationFrame(() => {
+                setShowDone(false);
+                setDoneVisible(false);
+            });
         }
         wasActiveRef.current = isActive;
+        return () => {
+            if (frame) cancelAnimationFrame(frame);
+        };
     }, [isActive]);
 
     return (
@@ -319,25 +331,25 @@ function TRAssistantMessage({
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    p: ({ node, ...props }) => (
+                    p: ({ ...props }) => (
                         <p className="mb-2 leading-6" {...props} />
                     ),
-                    ul: ({ node, ...props }) => (
+                    ul: ({ ...props }) => (
                         <ul
                             className="list-disc list-outside mb-2 pl-4"
                             {...props}
                         />
                     ),
-                    ol: ({ node, ...props }) => (
+                    ol: ({ ...props }) => (
                         <ol
                             className="list-decimal list-outside mb-2 pl-4"
                             {...props}
                         />
                     ),
-                    li: ({ node, ...props }) => (
+                    li: ({ ...props }) => (
                         <li className="mb-0.5 leading-6" {...props} />
                     ),
-                    strong: ({ node, ...props }) => (
+                    strong: ({ ...props }) => (
                         <strong className="font-semibold" {...props} />
                     ),
                     code: ({ children }) => {
@@ -499,14 +511,14 @@ function TRChatInput({
     onCancel,
     model,
     onModelChange,
-    apiKeys,
+    providerAvailability,
 }: {
     isLoading: boolean;
     onSubmit: (value: string) => void;
     onCancel: () => void;
     model: string;
     onModelChange: (id: string) => void;
-    apiKeys: { claudeApiKey: string | null; geminiApiKey: string | null };
+    providerAvailability: ProviderAvailability | null;
 }) {
     const [value, setValue] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -548,7 +560,7 @@ function TRChatInput({
                     <ModelToggle
                         value={model}
                         onChange={onModelChange}
-                        apiKeys={apiKeys}
+                        providerAvailability={providerAvailability}
                     />
                     <button
                         type="button"
@@ -655,18 +667,13 @@ export function TRChatPanel({
     reviewId,
     reviewTitle,
     projectName,
-    columns: _columns,
-    documents: _documents,
     onCitationClick,
     onClose,
     initialChatId,
     onChatIdChange,
 }: Props) {
     const { profile, updateModelPreference } = useUserProfile();
-    const apiKeys = {
-        claudeApiKey: profile?.claudeApiKey ?? null,
-        geminiApiKey: profile?.geminiApiKey ?? null,
-    };
+    const providerAvailability = profile?.providerAvailability ?? null;
     const currentModel = profile?.tabularModel ?? "gemini-3-flash-preview";
     const [apiKeyModalProvider, setApiKeyModalProvider] =
         useState<ModelProvider | null>(null);
@@ -736,7 +743,7 @@ export function TRChatPanel({
             .then((raw) => setMessages(mapTRMessages(raw) as TRMessage[]))
             .catch(() => {})
             .finally(() => setIsLoadingMessages(false));
-    }, [reviewId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [initialChatId, reviewId]);
 
     // Fill in title once chats list arrives
     useEffect(() => {
@@ -756,9 +763,12 @@ export function TRChatPanel({
     }, [currentChatId]);
 
     useEffect(() => {
+        let frame = 0;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
         if (messages.length === 0) {
             hasScrolledRef.current = false;
-            setMessagesVisible(false);
+            frame = requestAnimationFrame(() => setMessagesVisible(false));
         } else if (!hasScrolledRef.current) {
             const userMsgCount = messages.filter(
                 (m) => m.role === "user",
@@ -768,7 +778,7 @@ export function TRChatPanel({
                 latestUserMessageRef.current &&
                 messagesContainerRef.current
             ) {
-                setTimeout(() => {
+                timer = setTimeout(() => {
                     const container = messagesContainerRef.current;
                     const element = latestUserMessageRef.current;
                     if (container && element) {
@@ -782,10 +792,14 @@ export function TRChatPanel({
                 }, 100);
             } else {
                 hasScrolledRef.current = true;
-                setMessagesVisible(true);
+                frame = requestAnimationFrame(() => setMessagesVisible(true));
             }
         }
-    }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+        return () => {
+            cancelAnimationFrame(frame);
+            if (timer) clearTimeout(timer);
+        };
+    }, [messages]);
 
     useEffect(() => {
         const userEl = latestUserMessageRef.current;
@@ -1013,7 +1027,7 @@ export function TRChatPanel({
 
     async function handleSubmit(trimmed: string) {
         if (!trimmed || isLoading) return;
-        if (!isModelAvailable(currentModel, apiKeys)) {
+        if (!isModelAvailable(currentModel, providerAvailability)) {
             setApiKeyModalProvider(getModelProvider(currentModel));
             return;
         }
@@ -1513,7 +1527,7 @@ export function TRChatPanel({
                 onModelChange={(id) =>
                     updateModelPreference("tabularModel", id)
                 }
-                apiKeys={apiKeys}
+                providerAvailability={providerAvailability}
             />
 
             <ApiKeyMissingModal

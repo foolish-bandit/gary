@@ -70,10 +70,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
     } | null>(null);
     const [model, setModel] = useSelectedModel();
     const { profile } = useUserProfile();
-    const apiKeys = {
-        claudeApiKey: profile?.claudeApiKey ?? null,
-        geminiApiKey: profile?.geminiApiKey ?? null,
-    };
+    const providerAvailability = profile?.providerAvailability ?? null;
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [docSelectorOpen, setDocSelectorOpen] = useState(false);
     const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
@@ -122,7 +119,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
     const handleSubmit = () => {
         const query = value.trim();
         if (!query || isLoading) return;
-        if (!isModelAvailable(model, apiKeys)) {
+        if (!isModelAvailable(model, providerAvailability)) {
             setApiKeyModalProvider(getModelProvider(model));
             return;
         }
@@ -287,7 +284,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput(
                                 <ModelToggle
                                     value={model}
                                     onChange={setModel}
-                                    apiKeys={apiKeys}
+                                    providerAvailability={providerAvailability}
                                 />
                             )}
                             <button

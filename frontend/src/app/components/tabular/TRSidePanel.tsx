@@ -156,7 +156,7 @@ export function TRSidePanel({
                                         ref={quoteParagraphRef}
                                         className={`flex-1 text-sm text-gray-600 ${quoteExpanded ? "" : "truncate"}`}
                                     >
-                                        "{docCitation.quote}"
+                                        &ldquo;{docCitation.quote}&rdquo;
                                     </p>
                                     {(isTruncated || quoteExpanded) && (
                                         <ChevronDown
@@ -372,7 +372,7 @@ function MarkdownContent({
         <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-                p: ({ node, ...props }) =>
+                p: ({ ...props }) =>
                     inline ? (
                         <span {...props} />
                     ) : (
@@ -381,26 +381,26 @@ function MarkdownContent({
                             {...props}
                         />
                     ),
-                ul: ({ node, ...props }) => (
+                ul: ({ ...props }) => (
                     <ul
                         className="list-disc pl-4 space-y-0.5 mb-1.5 last:mb-0"
                         {...props}
                     />
                 ),
-                ol: ({ node, ...props }) => (
+                ol: ({ ...props }) => (
                     <ol
                         className="list-decimal pl-4 space-y-0.5 mb-1.5 last:mb-0"
                         {...props}
                     />
                 ),
-                li: ({ node, ...props }) => <li {...props} />,
-                strong: ({ node, ...props }) => (
+                li: ({ ...props }) => <li {...props} />,
+                strong: ({ ...props }) => (
                     <strong className="font-semibold" {...props} />
                 ),
-                em: ({ node, ...props }) => (
+                em: ({ ...props }) => (
                     <em className="italic" {...props} />
                 ),
-                a: ({ node, href, children, ...props }) => (
+                a: ({ href, children, ...props }) => (
                     <a
                         href={href}
                         target="_blank"
@@ -411,7 +411,7 @@ function MarkdownContent({
                         {children}
                     </a>
                 ),
-                code: ({ node, children: codeChildren, ...props }) => {
+                code: ({ children: codeChildren, ...props }) => {
                     const t = String(codeChildren);
                     const citMatch = t.match(/^§c(\d+)§$/);
                     if (citMatch) {

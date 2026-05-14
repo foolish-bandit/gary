@@ -21,15 +21,16 @@ export default function AccountPage() {
     const [orgSaved, setOrgSaved] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const profileDisplayName = profile?.displayName ?? "";
+    const profileOrganisation = profile?.organisation ?? "";
 
     useEffect(() => {
-        if (profile?.displayName) {
-            setDisplayName(profile.displayName);
-        }
-        if (profile?.organisation) {
-            setOrganisation(profile.organisation);
-        }
-    }, [profile]);
+        const frame = requestAnimationFrame(() => {
+            setDisplayName(profileDisplayName);
+            setOrganisation(profileOrganisation);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [profileDisplayName, profileOrganisation]);
 
     const handleLogout = async () => {
         await signOut();

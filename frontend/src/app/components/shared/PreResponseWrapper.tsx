@@ -28,7 +28,10 @@ export function PreResponseWrapper({
     useEffect(() => {
         if (shouldMinimize) hasMinimizedRef.current = true;
         if (userToggled) return;
-        setIsOpen(!shouldMinimize && !hasMinimizedRef.current);
+        const frame = requestAnimationFrame(() => {
+            setIsOpen(!shouldMinimize && !hasMinimizedRef.current);
+        });
+        return () => cancelAnimationFrame(frame);
     }, [shouldMinimize, userToggled]);
 
     const stepWord = `step${stepCount === 1 ? "" : "s"}`;

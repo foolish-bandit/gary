@@ -20,7 +20,7 @@ export function ApiKeyMissingModal({ open, onClose, provider, message }: Props) 
     const providerName = provider ? providerLabel(provider) : "the AI service";
     const body =
         message ??
-        `GaryOSS isn't connected to ${providerName} yet. Open AI configuration to add a key.`;
+        `${providerName} is not configured on the server yet. Contact the administrator or open AI configuration to check provider status.`;
 
     const handleGoToAccount = () => {
         onClose();
@@ -68,7 +68,7 @@ export function ApiKeyMissingModal({ open, onClose, provider, message }: Props) 
                         onClick={handleGoToAccount}
                         className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700"
                     >
-                        Open AI configuration
+                        View AI configuration
                     </button>
                 </div>
             </div>

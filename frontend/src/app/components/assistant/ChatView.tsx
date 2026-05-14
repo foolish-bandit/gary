@@ -356,7 +356,7 @@ export function ChatView({
                 `calc(100dvh - ${headerHeight + gap + userMessageHeight + paddingBottom + marginBottom}px)`,
             );
         }
-    }, [messages.length, latestUserMessageRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [messages.length]);
 
     const updateScrollButton = useCallback(() => {
         const c = messagesContainerRef.current;
@@ -369,8 +369,11 @@ export function ChatView({
         const c = messagesContainerRef.current;
         if (!c) return;
         c.addEventListener("scroll", updateScrollButton);
-        updateScrollButton();
-        return () => c.removeEventListener("scroll", updateScrollButton);
+        const frame = requestAnimationFrame(() => updateScrollButton());
+        return () => {
+            cancelAnimationFrame(frame);
+            c.removeEventListener("scroll", updateScrollButton);
+        };
     }, [messages, updateScrollButton]);
 
     const scrollToBottom = () => {
@@ -401,9 +404,12 @@ export function ChatView({
     }, [isResponseLoading, scrollLatestUserToTop]);
 
     useEffect(() => {
+        let frame = 0;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
         if (messages.length === 0) {
             hasScrolledRef.current = false;
-            setMessagesVisible(false);
+            frame = requestAnimationFrame(() => setMessagesVisible(false));
         } else if (!hasScrolledRef.current) {
             const userMsgCount = messages.filter(
                 (m) => m.role === "user",
@@ -413,7 +419,7 @@ export function ChatView({
                 latestUserMessageRef.current &&
                 messagesContainerRef.current
             ) {
-                setTimeout(() => {
+                timer = setTimeout(() => {
                     const container = messagesContainerRef.current;
                     const element = latestUserMessageRef.current;
                     if (container && element) {
@@ -427,10 +433,14 @@ export function ChatView({
                 }, 100);
             } else {
                 hasScrolledRef.current = true;
-                setMessagesVisible(true);
+                frame = requestAnimationFrame(() => setMessagesVisible(true));
             }
         }
-    }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+        return () => {
+            cancelAnimationFrame(frame);
+            if (timer) clearTimeout(timer);
+        };
+    }, [messages]);
 
     useEffect(() => {
         if (panelMounted && window.innerWidth < 768) {
@@ -494,8 +504,8 @@ export function ChatView({
                                         {msg.role === "user" ? (
                                             <UserMessage
                                                 content={msg.content ?? ""}
-                                                files={(msg as any).files}
-                                                workflow={(msg as any).workflow}
+                                                files={msg.files}
+                                                workflow={msg.workflow}
                                             />
                                         ) : (
                                             <AssistantMessage
@@ -505,11 +515,10 @@ export function ChatView({
                                                     i === messages.length - 1 &&
                                                     isResponseLoading
                                                 }
-                                                isError={!!(msg as any).error}
+                                                isError={!!msg.error}
                                                 errorMessage={
-                                                    typeof (msg as any).error ===
-                                                    "string"
-                                                        ? (msg as any).error
+                                                    typeof msg.error === "string"
+                                                        ? msg.error
                                                         : undefined
                                                 }
                                                 annotations={msg.annotations}

@@ -82,7 +82,8 @@ export function AddProjectDocsModal({
         }
         setSelectedIds((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             return next;
         });
     }
@@ -107,8 +108,8 @@ export function AddProjectDocsModal({
                 uploaded.forEach((d) => next.add(d.id));
                 return next;
             });
-        } catch (err) {
-            console.error("Upload failed:", err);
+        } catch (error) {
+            console.error("Upload failed:", error);
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

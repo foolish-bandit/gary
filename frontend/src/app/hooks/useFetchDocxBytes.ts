@@ -47,18 +47,12 @@ export function useFetchDocxBytes(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    console.log("[useFetchDocxBytes] init", {
-        documentId,
-        versionId,
-        refetchKey,
-        initialKey,
-        cacheHit: initialKey ? bytesCache.has(initialKey) : null,
-    });
-
     useEffect(() => {
         if (!documentId) {
-            setBytes(null);
-            setDownloadUrl(null);
+            queueMicrotask(() => {
+                setBytes(null);
+                setDownloadUrl(null);
+            });
             return;
         }
 
@@ -73,16 +67,21 @@ export function useFetchDocxBytes(
         // Cache hit: reuse bytes synchronously, no network, no spinner.
         const cached = bytesCache.get(key);
         if (cached) {
-            setBytes(cached);
-            setDownloadUrl(url);
-            setLoading(false);
-            setError(null);
+            queueMicrotask(() => {
+                setBytes(cached);
+                setDownloadUrl(url);
+                setLoading(false);
+                setError(null);
+            });
             return;
         }
 
         let cancelled = false;
-        setLoading(true);
-        setError(null);
+        queueMicrotask(() => {
+            if (cancelled) return;
+            setLoading(true);
+            setError(null);
+        });
 
         const pending =
             inFlight.get(key) ??

@@ -19,22 +19,23 @@ export function invalidateDirectoryCache() {
 }
 
 export function useDirectoryData(enabled: boolean) {
-    const [loading, setLoading] = useState(true);
-    const [standaloneDocuments, setStandaloneDocuments] = useState<MikeDocument[]>([]);
-    const [projects, setProjects] = useState<MikeProject[]>([]);
+    const initialCache = enabled ? cache : null;
+    const [loading, setLoading] = useState(() => !initialCache);
+    const [standaloneDocuments, setStandaloneDocuments] = useState<MikeDocument[]>(
+        () => initialCache?.standaloneDocuments ?? [],
+    );
+    const [projects, setProjects] = useState<MikeProject[]>(
+        () => initialCache?.projects ?? [],
+    );
 
     useEffect(() => {
         if (!enabled) return;
 
-        const now = Date.now();
-        if (cache && now - cache.fetchedAt < CACHE_TTL_MS) {
-            setStandaloneDocuments(cache.standaloneDocuments);
-            setProjects(cache.projects);
-            setLoading(false);
+        if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
             return;
         }
 
-        setLoading(true);
+        queueMicrotask(() => setLoading(true));
         Promise.all([listProjects(), listStandaloneDocuments()])
             .then(([ps, ds]) => {
                 const sorted = [...ds].sort((a, b) =>

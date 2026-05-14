@@ -8,6 +8,11 @@ import React, {
     ReactNode,
 } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+    isDevAuthBypassEnabled,
+    verifyWorkspaceAccess,
+    WORKSPACE_ACCESS_DENIED_MESSAGE,
+} from "@/lib/workspaceAccess";
 
 interface User {
     id: string;
@@ -18,17 +23,16 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     authLoading: boolean;
-    /** True when NEXT_PUBLIC_GARY_SKIP_AUTH=true — dev/demo only. */
     isAuthBypassed: boolean;
+    authError: string | null;
+    clearAuthError: () => void;
     signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Resolved once at module load. NEXT_PUBLIC_* is baked into the client bundle
-// at build time, so this is effectively a build-time toggle on the deployed
-// Worker. Never enable in production.
-const SKIP_AUTH = process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
+const SKIP_AUTH = isDevAuthBypassEnabled();
+const HAS_SKIP_AUTH_FLAG = process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
 
 const DEMO_USER: User = {
     id: "00000000-0000-0000-0000-000000000000",
@@ -36,63 +40,77 @@ const DEMO_USER: User = {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    // Lazy initial state so the bypass needs no setState inside the effect.
     const [user, setUser] = useState<User | null>(() =>
         SKIP_AUTH ? DEMO_USER : null,
     );
     const [authLoading, setAuthLoading] = useState(() => !SKIP_AUTH);
+    const [authError, setAuthError] = useState<string | null>(null);
+
+    async function bootstrapSession(session: {
+        access_token: string;
+        user: { id: string; email?: string | null };
+    } | null): Promise<void> {
+        if (!session?.user) {
+            setUser(null);
+            setAuthLoading(false);
+            return;
+        }
+
+        const access = await verifyWorkspaceAccess(session.access_token);
+        if (!access.ok) {
+            if (access.denySession) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setAuthError(access.message || WORKSPACE_ACCESS_DENIED_MESSAGE);
+                setAuthLoading(false);
+                return;
+            }
+
+            setAuthError(null);
+            setUser({
+                id: session.user.id,
+                email: session.user.email || "",
+            });
+            setAuthLoading(false);
+            return;
+        }
+
+        setAuthError(null);
+        setUser({
+            id: session.user.id,
+            email: session.user.email || "",
+        });
+        setAuthLoading(false);
+    }
 
     useEffect(() => {
         if (SKIP_AUTH) {
             if (typeof window !== "undefined") {
                 console.warn(
-                    "[GaryOSS] NEXT_PUBLIC_GARY_SKIP_AUTH=true — running with a fake demo user. Backend calls will not be authenticated. Do not enable this in production.",
+                    "[GaryOSS] NEXT_PUBLIC_GARY_SKIP_AUTH=true - running with a fake demo user. Backend calls will not be authenticated. Do not enable this in production.",
                 );
             }
             return;
         }
 
-        const ensureProfile = async (accessToken: string) => {
-            const apiBase =
-                process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
-            await fetch(`${apiBase}/user/profile`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${accessToken}` },
-            }).catch((e) => {
-                console.log(e);
-            });
-        };
+        if (HAS_SKIP_AUTH_FLAG && typeof window !== "undefined") {
+            console.error(
+                "[GaryOSS] NEXT_PUBLIC_GARY_SKIP_AUTH=true was ignored because production auth bypass is disabled.",
+            );
+        }
 
-        const checkUser = async () => {
+        void (async () => {
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-
-            if (session?.user) {
-                setUser({
-                    id: session.user.id,
-                    email: session.user.email || "",
-                });
-                ensureProfile(session.access_token);
-            }
-            setAuthLoading(false);
-        };
-
-        checkUser();
+            await bootstrapSession(session);
+        })();
 
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session?.user) {
-                setUser({
-                    id: session.user.id,
-                    email: session.user.email || "",
-                });
-                ensureProfile(session.access_token);
-            } else {
-                setUser(null);
-            }
-            setAuthLoading(false);
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setAuthLoading(true);
+            void bootstrapSession(session);
         });
 
         return () => {
@@ -100,14 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+    const clearAuthError = () => setAuthError(null);
+
     const signOut = async () => {
         if (SKIP_AUTH) {
-            // No-op so the demo session stays stable. The bypass is build-time
-            // and would re-create the fake user on next mount anyway.
             return;
         }
         await supabase.auth.signOut();
         setUser(null);
+        setAuthError(null);
     };
 
     return (
@@ -117,6 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAuthenticated: !!user,
                 authLoading,
                 isAuthBypassed: SKIP_AUTH,
+                authError,
+                clearAuthError,
                 signOut,
             }}
         >

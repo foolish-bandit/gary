@@ -58,7 +58,7 @@ Open `http://localhost:3000`.
 
 - Supabase Auth and Postgres
 - S3-compatible object storage, such as Cloudflare R2
-- At least one supported model provider key, depending on which models you enable
+- At least one supported model provider key, depending on which models you enable (`OPENAI_API_KEY`, `GEMINI_API_KEY`, and/or `ANTHROPIC_API_KEY`)
 - LibreOffice for DOC/DOCX to PDF conversion
 
 ## Checks

@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertCircle, Check, ChevronDown, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AlertCircle, Check, ChevronDown } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,78 +14,102 @@ import { MODELS } from "@/app/components/assistant/ModelToggle";
 import {
     isModelAvailable,
     modelGroupToProvider,
+    providerLabel,
 } from "@/app/lib/modelAvailability";
+import type { ProviderAvailability } from "@/app/lib/mikeApi";
+import { useState } from "react";
 
-export default function ModelsAndApiKeysPage() {
-    const { profile, updateModelPreference, updateApiKey } = useUserProfile();
+export default function ModelsPage() {
+    const { profile, updateModelPreference } = useUserProfile();
+    const providerAvailability = profile?.providerAvailability ?? null;
 
     return (
-        <div className="space-y-4">
-            {/* Default assistant for tabular reviews */}
-            <div className="pb-6">
-                <div className="flex items-center gap-2 mb-4">
+        <div className="space-y-8">
+            <section className="space-y-4">
+                <div className="space-y-1">
                     <h2 className="text-2xl font-medium font-serif">
                         Default assistant
                     </h2>
+                    <p className="text-sm text-gray-500 max-w-2xl">
+                        Choose the default assistant for tabular reviews. Gary
+                        only shows providers configured on the server.
+                    </p>
                 </div>
-                <div className="space-y-4 max-w-md">
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-2">
-                            Assistant for tabular reviews
-                        </label>
-                        <TabularModelDropdown
-                            value={
-                                profile?.tabularModel ??
-                                "gemini-3-flash-preview"
-                            }
-                            apiKeys={{
-                                claudeApiKey: profile?.claudeApiKey ?? null,
-                                geminiApiKey: profile?.geminiApiKey ?? null,
-                            }}
-                            onChange={(id) =>
-                                updateModelPreference("tabularModel", id)
-                            }
-                        />
-                    </div>
-                </div>
-            </div>
 
-            {/* AI service keys */}
-            <div className="py-6">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="max-w-md">
+                    <label className="text-sm text-gray-600 block mb-2">
+                        Assistant for tabular reviews
+                    </label>
+                    <TabularModelDropdown
+                        value={profile?.tabularModel ?? "gemini-3-flash-preview"}
+                        providerAvailability={providerAvailability}
+                        onChange={(id) =>
+                            updateModelPreference("tabularModel", id)
+                        }
+                    />
+                </div>
+            </section>
+
+            <section className="space-y-4">
+                <div className="space-y-1">
                     <h2 className="text-2xl font-medium font-serif">
-                        AI service keys
+                        Provider status
                     </h2>
+                    <p className="text-sm text-gray-500 max-w-2xl">
+                        Model providers are configured by the administrator on
+                        the backend. No user API keys are required.
+                    </p>
                 </div>
-                <p className="text-sm text-gray-500 mb-4 max-w-xl">
-                    GaryOSS connects to an outside AI service to answer
-                    questions. Add a service key below to enable answers, or
-                    add the keys to a <code>.env</code> file if you are
-                    running your own instance.
-                </p>
-                <p className="text-xs text-gray-400 mb-4 max-w-xl">
-                    Chat titles use the cheapest assistant from whichever
-                    service you have configured.
-                </p>
-                <div className="space-y-4 max-w-xl">
-                    <ApiKeyField
-                        label="Anthropic (Claude) key"
-                        placeholder="sk-ant-…"
-                        initialValue={profile?.claudeApiKey ?? ""}
-                        onSave={(value) =>
-                            updateApiKey("claude", value.trim() || null)
-                        }
+
+                {!providerAvailability ||
+                !Object.values(providerAvailability).some(Boolean) ? (
+                    <div className="max-w-2xl rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        GaryOSS is not configured yet. Contact the
+                        administrator.
+                    </div>
+                ) : null}
+
+                <div className="max-w-2xl space-y-3">
+                    <ProviderRow
+                        label={providerLabel("openai")}
+                        available={!!providerAvailability?.openai}
                     />
-                    <ApiKeyField
-                        label="Google (Gemini) key"
-                        placeholder="AI…"
-                        initialValue={profile?.geminiApiKey ?? ""}
-                        onSave={(value) =>
-                            updateApiKey("gemini", value.trim() || null)
-                        }
+                    <ProviderRow
+                        label={providerLabel("gemini")}
+                        available={!!providerAvailability?.gemini}
+                    />
+                    <ProviderRow
+                        label={providerLabel("claude")}
+                        available={!!providerAvailability?.claude}
                     />
                 </div>
+            </section>
+        </div>
+    );
+}
+
+function ProviderRow({
+    label,
+    available,
+}: {
+    label: string;
+    available: boolean;
+}) {
+    return (
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+            <div className="flex items-center gap-3">
+                {available ? (
+                    <Check className="h-4 w-4 text-emerald-600" />
+                ) : (
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                )}
+                <span className="text-sm text-gray-900">{label}</span>
             </div>
+            <span
+                className={`text-xs font-medium ${available ? "text-emerald-700" : "text-amber-700"}`}
+            >
+                {available ? "Configured" : "Unavailable"}
+            </span>
         </div>
     );
 }
@@ -96,16 +117,20 @@ export default function ModelsAndApiKeysPage() {
 function TabularModelDropdown({
     value,
     onChange,
-    apiKeys,
+    providerAvailability,
 }: {
     value: string;
     onChange: (id: string) => void;
-    apiKeys: { claudeApiKey: string | null; geminiApiKey: string | null };
+    providerAvailability: ProviderAvailability | null;
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const selected = MODELS.find((m) => m.id === value);
-    const selectedAvailable = isModelAvailable(value, apiKeys);
-    const groups: ("Anthropic" | "Google")[] = ["Anthropic", "Google"];
+    const selectedAvailable = isModelAvailable(value, providerAvailability);
+    const groups: ("Anthropic" | "Google" | "OpenAI")[] = [
+        "Anthropic",
+        "Google",
+        "OpenAI",
+    ];
 
     return (
         <DropdownMenu onOpenChange={setIsOpen}>
@@ -116,7 +141,7 @@ function TabularModelDropdown({
                 >
                     <span className="flex items-center gap-2 min-w-0">
                         {!selectedAvailable && (
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
                         )}
                         <span className="truncate text-gray-900">
                             {selected?.label ?? "Select an assistant"}
@@ -145,16 +170,19 @@ function TabularModelDropdown({
                                 const provider = modelGroupToProvider(m.group);
                                 const available = isModelAvailable(
                                     m.id,
-                                    apiKeys,
+                                    providerAvailability,
                                 );
                                 return (
                                     <DropdownMenuItem
                                         key={m.id}
                                         className="cursor-pointer"
-                                        onSelect={() => onChange(m.id)}
+                                        disabled={!available}
+                                        onSelect={() => {
+                                            if (available) onChange(m.id);
+                                        }}
                                         title={
                                             !available
-                                                ? `Add a ${provider === "claude" ? "Claude" : "Gemini"} key in AI configuration to use this assistant`
+                                                ? `${providerLabel(provider)} is not configured on the server`
                                                 : undefined
                                         }
                                     >
@@ -164,7 +192,7 @@ function TabularModelDropdown({
                                             {m.label}
                                         </span>
                                         {!available && (
-                                            <AlertCircle className="h-3.5 w-3.5 text-red-500 ml-1" />
+                                            <AlertCircle className="h-3.5 w-3.5 text-amber-600 ml-1" />
                                         )}
                                         {m.id === value && available && (
                                             <Check className="h-3.5 w-3.5 text-gray-600 ml-1" />
@@ -177,87 +205,5 @@ function TabularModelDropdown({
                 })}
             </DropdownMenuContent>
         </DropdownMenu>
-    );
-}
-
-function ApiKeyField({
-    label,
-    placeholder,
-    initialValue,
-    onSave,
-}: {
-    label: string;
-    placeholder: string;
-    initialValue: string;
-    onSave: (value: string) => Promise<boolean>;
-}) {
-    const [value, setValue] = useState(initialValue);
-    const [reveal, setReveal] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-
-    useEffect(() => {
-        setValue(initialValue);
-    }, [initialValue]);
-
-    const dirty = value !== initialValue;
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        const ok = await onSave(value);
-        setIsSaving(false);
-        if (ok) {
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        } else {
-            alert(`Could not save your ${label}. Try again.`);
-        }
-    };
-
-    return (
-        <div>
-            <label className="text-sm text-gray-600 block mb-2">{label}</label>
-            <div className="flex gap-2">
-                <div className="relative flex-1">
-                    <Input
-                        type={reveal ? "text" : "password"}
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        placeholder={placeholder}
-                        className="pr-10"
-                        autoComplete="off"
-                        spellCheck={false}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setReveal((r) => !r)}
-                        className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
-                        aria-label={reveal ? "Hide key" : "Show key"}
-                    >
-                        {reveal ? (
-                            <EyeOff className="h-4 w-4" />
-                        ) : (
-                            <Eye className="h-4 w-4" />
-                        )}
-                    </button>
-                </div>
-                <Button
-                    onClick={handleSave}
-                    disabled={isSaving || !dirty || saved}
-                    className="min-w-[80px] transition-all bg-black hover:bg-gray-900 text-white"
-                >
-                    {isSaving ? (
-                        "Saving..."
-                    ) : saved ? (
-                        <>
-                            <Check className="h-4 w-3" />
-                            Saved
-                        </>
-                    ) : (
-                        "Save"
-                    )}
-                </Button>
-            </div>
-        </div>
     );
 }

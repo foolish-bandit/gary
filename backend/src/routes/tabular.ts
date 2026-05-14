@@ -17,6 +17,19 @@ import {
     ensureReviewAccess,
     listAccessibleProjectIds,
 } from "../lib/access";
+import { errorLog } from "../lib/log";
+import {
+    ensureObject,
+    parseChatMessages,
+    parseOptionalEmailArray,
+    parseOptionalNullableString,
+    parseOptionalString,
+    parseOptionalStringArray,
+    parseRequiredInteger,
+    parseRequiredTrimmedString,
+    parseTabularColumnsConfig,
+    ValidationError,
+} from "../lib/validation";
 
 function formatPromptSuffix(format?: string, tags?: string[]): string {
     switch (format) {
@@ -172,14 +185,38 @@ tabularRouter.get("/", requireAuth, async (req, res) => {
 tabularRouter.post("/", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const userEmail = res.locals.userEmail as string | undefined;
-    const { title, document_ids, columns_config, workflow_id, project_id } =
-        req.body as {
-            title?: string;
-            document_ids: string[];
-            columns_config: { index: number; name: string; prompt: string }[];
-            workflow_id?: string;
-            project_id?: string;
-        };
+    let title: string | null = null;
+    let document_ids: string[];
+    let columns_config: {
+        index: number;
+        name: string;
+        prompt: string;
+        format?: string;
+        tags?: string[];
+    }[];
+    let workflow_id: string | null = null;
+    let project_id: string | null = null;
+    try {
+        const body = ensureObject(req.body);
+        title = parseOptionalNullableString(body.title, "title") ?? null;
+        document_ids =
+            parseOptionalStringArray(body.document_ids, "document_ids", {
+                maxItems: 500,
+            }) ?? [];
+        columns_config = parseTabularColumnsConfig(body.columns_config);
+        workflow_id =
+            parseOptionalNullableString(body.workflow_id, "workflow_id") ?? null;
+        project_id =
+            parseOptionalNullableString(body.project_id, "project_id") ?? null;
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
+    if (!document_ids.length) {
+        return void res.status(400).json({ detail: "document_ids is required" });
+    }
 
     const db = createServerSupabase();
     if (project_id) {
@@ -196,10 +233,10 @@ tabularRouter.post("/", requireAuth, async (req, res) => {
         .from("tabular_reviews")
         .insert({
             user_id: userId,
-            title: title ?? null,
+            title,
             columns_config,
-            project_id: project_id ?? null,
-            workflow_id: workflow_id ?? null,
+            project_id,
+            workflow_id,
         })
         .select("*")
         .single();
@@ -224,20 +261,22 @@ tabularRouter.post("/", requireAuth, async (req, res) => {
 // POST /tabular-review/prompt (must come before /:reviewId routes)
 tabularRouter.post("/prompt", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
-    const title =
-        typeof req.body.title === "string" ? req.body.title.trim() : "";
-    if (!title)
-        return void res.status(400).json({ detail: "title is required" });
-
-    const format: string =
-        typeof req.body.format === "string" ? req.body.format : "text";
-    const documentName: string =
-        typeof req.body.documentName === "string"
-            ? req.body.documentName.trim()
-            : "";
-    const tags: string[] = Array.isArray(req.body.tags)
-        ? req.body.tags.filter((t: unknown) => typeof t === "string")
-        : [];
+    let title: string;
+    let format = "text";
+    let documentName = "";
+    let tags: string[] = [];
+    try {
+        const body = ensureObject(req.body);
+        title = parseRequiredTrimmedString(body.title, "title");
+        format = parseOptionalString(body.format, "format") ?? "text";
+        documentName = parseOptionalString(body.documentName, "documentName")?.trim() ?? "";
+        tags = parseOptionalStringArray(body.tags, "tags", { maxItems: 50 }) ?? [];
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
     const formatDescriptions: Record<string, string> = {
         text: "free-form text",
@@ -423,25 +462,50 @@ tabularRouter.patch("/:reviewId", requireAuth, async (req, res) => {
     const userEmail = res.locals.userEmail as string | undefined;
     const { reviewId } = req.params;
     const updates: Record<string, unknown> = {};
-    if (req.body.title != null) updates.title = req.body.title;
-    if (req.body.columns_config != null)
-        updates.columns_config = req.body.columns_config;
-    if (req.body.project_id !== undefined)
-        updates.project_id = req.body.project_id;
+    let body: Record<string, unknown>;
+    let columnsConfigUpdate:
+        | {
+              index: number;
+              name: string;
+              prompt: string;
+              format?: string;
+              tags?: string[];
+          }[]
+        | undefined;
+    let documentIdsUpdate: string[] | undefined;
+    try {
+        body = ensureObject(req.body);
+        const title = parseOptionalString(body.title, "title");
+        if (title !== undefined) updates.title = title.trim();
+        if ("columns_config" in body && body.columns_config !== undefined) {
+            columnsConfigUpdate = parseTabularColumnsConfig(body.columns_config);
+            updates.columns_config = columnsConfigUpdate;
+        }
+        if ("project_id" in body) {
+            updates.project_id =
+                parseOptionalNullableString(body.project_id, "project_id") ?? null;
+        }
+        documentIdsUpdate = parseOptionalStringArray(body.document_ids, "document_ids", {
+            maxItems: 500,
+        });
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
     // shared_with edits are owner-only — gated below after we know who's
     // making the call. Normalize lowercase + dedupe + drop empties.
     let sharedWithUpdate: string[] | undefined;
-    if (Array.isArray(req.body.shared_with)) {
-        const seen = new Set<string>();
-        const cleaned: string[] = [];
-        for (const raw of req.body.shared_with) {
-            if (typeof raw !== "string") continue;
-            const e = raw.trim().toLowerCase();
-            if (!e || seen.has(e)) continue;
-            seen.add(e);
-            cleaned.push(e);
+    try {
+        sharedWithUpdate = parseOptionalEmailArray(body.shared_with, "shared_with", {
+            maxItems: 200,
+        });
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
         }
-        sharedWithUpdate = cleaned;
+        throw error;
     }
     updates.updated_at = new Date().toISOString();
 
@@ -481,8 +545,8 @@ tabularRouter.patch("/:reviewId", requireAuth, async (req, res) => {
         });
 
     if (
-        Array.isArray(req.body.columns_config) ||
-        Array.isArray(req.body.document_ids)
+        Array.isArray(columnsConfigUpdate) ||
+        Array.isArray(documentIdsUpdate)
     ) {
         const { data: existingCells } = await db
             .from("tabular_cells")
@@ -496,9 +560,9 @@ tabularRouter.patch("/:reviewId", requireAuth, async (req, res) => {
 
         let documentIds: string[];
 
-        if (Array.isArray(req.body.document_ids)) {
+        if (Array.isArray(documentIdsUpdate)) {
             // document_ids is the new source of truth — delete removed docs' cells
-            const newDocIds = req.body.document_ids as string[];
+            const newDocIds = documentIdsUpdate;
             const existingDocIds = (existingCells ?? []).map(
                 (cell) => cell.document_id,
             );
@@ -535,8 +599,8 @@ tabularRouter.patch("/:reviewId", requireAuth, async (req, res) => {
             }
         }
 
-        const activeColumns = Array.isArray(req.body.columns_config)
-            ? req.body.columns_config
+        const activeColumns = Array.isArray(columnsConfigUpdate)
+            ? columnsConfigUpdate
             : (updatedReview.columns_config ?? []);
         const newCells = documentIds.flatMap((documentId) =>
             activeColumns
@@ -587,9 +651,21 @@ tabularRouter.post("/:reviewId/clear-cells", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const userEmail = res.locals.userEmail as string | undefined;
     const { reviewId } = req.params;
-    const { document_ids } = req.body as { document_ids?: string[] };
+    let document_ids: string[];
+    try {
+        const body = ensureObject(req.body);
+        document_ids =
+            parseOptionalStringArray(body.document_ids, "document_ids", {
+                maxItems: 500,
+            }) ?? [];
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
-    if (!Array.isArray(document_ids) || document_ids.length === 0)
+    if (!document_ids.length)
         return void res
             .status(400)
             .json({ detail: "document_ids is required" });
@@ -623,15 +699,18 @@ tabularRouter.post(
         const userId = res.locals.userId as string;
         const userEmail = res.locals.userEmail as string | undefined;
         const { reviewId } = req.params;
-        const { document_id, column_index } = req.body as {
-            document_id: string;
-            column_index: number;
-        };
-
-        if (!document_id || column_index == null)
-            return void res
-                .status(400)
-                .json({ detail: "document_id and column_index are required" });
+        let document_id: string;
+        let column_index: number;
+        try {
+            const body = ensureObject(req.body);
+            document_id = parseRequiredTrimmedString(body.document_id, "document_id");
+            column_index = parseRequiredInteger(body.column_index, "column_index");
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                return void res.status(error.status).json({ detail: error.message });
+            }
+            throw error;
+        }
 
         const db = createServerSupabase();
         const { data: review, error: reviewError } = await db
@@ -683,7 +762,7 @@ tabularRouter.post(
                             ? await extractPdfMarkdown(buf)
                             : await extractDocxMarkdown(buf);
                 } catch (err) {
-                    console.error(
+                    errorLog(
                         `[regenerate-cell] extraction error doc=${document_id}`,
                         err,
                     );
@@ -806,7 +885,7 @@ tabularRouter.post("/:reviewId/generate", requireAuth, async (req, res) => {
                                     ? await extractPdfMarkdown(buf)
                                     : await extractDocxMarkdown(buf);
                         } catch (err) {
-                            console.error(
+                            errorLog(
                                 `[tabular/generate] extraction error doc=${docId}`,
                                 err,
                             );
@@ -868,7 +947,7 @@ tabularRouter.post("/:reviewId/generate", requireAuth, async (req, res) => {
                         api_keys,
                     );
                 } catch (err) {
-                    console.error(
+                    errorLog(
                         `[tabular/generate] queryGeminiAllColumns error doc=${docId}`,
                         err,
                     );
@@ -893,7 +972,7 @@ tabularRouter.post("/:reviewId/generate", requireAuth, async (req, res) => {
 
         write("data: [DONE]\n\n");
     } catch (err) {
-        console.error("[tabular/generate] stream error", err);
+        errorLog("[tabular/generate] stream error", err);
         try {
             write(
                 `data: ${JSON.stringify({ type: "error", message: String(err) })}\n\ndata: [DONE]\n\n`,
@@ -1099,19 +1178,24 @@ tabularRouter.post("/:reviewId/chat", requireAuth, async (req, res) => {
     const userId = res.locals.userId as string;
     const userEmail = res.locals.userEmail as string | undefined;
     const { reviewId } = req.params;
-    const {
-        messages,
-        chat_id: existingChatId,
-        review_title: clientReviewTitle,
-        project_name: clientProjectName,
-    } = req.body as {
-        messages: ChatMessage[];
-        chat_id?: string;
-        review_title?: string;
-        project_name?: string;
-    };
+    let messages: ChatMessage[];
+    let existingChatId: string | undefined;
+    let clientReviewTitle: string | undefined;
+    let clientProjectName: string | undefined;
+    try {
+        const body = ensureObject(req.body);
+        messages = parseChatMessages(body.messages);
+        existingChatId = parseOptionalString(body.chat_id, "chat_id");
+        clientReviewTitle = parseOptionalString(body.review_title, "review_title");
+        clientProjectName = parseOptionalString(body.project_name, "project_name");
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return void res.status(error.status).json({ detail: error.message });
+        }
+        throw error;
+    }
 
-    const lastUser = [...(messages ?? [])]
+    const lastUser = [...messages]
         .reverse()
         .find((m) => m.role === "user");
     if (!lastUser?.content?.trim()) {
@@ -1283,7 +1367,7 @@ tabularRouter.post("/:reviewId/chat", requireAuth, async (req, res) => {
             }
         }
     } catch (err) {
-        console.error("[tabular/chat] error", err);
+        errorLog("[tabular/chat] error", err);
         try {
             write(
                 `data: ${JSON.stringify({ type: "error", message: String(err) })}\n\n`,
@@ -1370,7 +1454,7 @@ The "summary" field must contain only the extracted value with inline citations 
             apiKeys,
         });
     } catch (err) {
-        console.error("[queryGemini] completion failed", err);
+        errorLog("[queryGemini] completion failed", err);
         return null;
     }
     try {
@@ -1581,7 +1665,7 @@ Rules:
             },
         });
     } catch (err) {
-        console.error("[queryGeminiAllColumns] stream failed", err);
+        errorLog("[queryGeminiAllColumns] stream failed", err);
     }
 
     if (contentBuffer.trim()) pending.push(processLine(contentBuffer));

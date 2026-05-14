@@ -34,6 +34,22 @@ interface ServerChatDetailOut {
     messages: ServerMessage[];
 }
 
+export interface ProviderAvailability {
+    openai: boolean;
+    gemini: boolean;
+    claude: boolean;
+}
+
+export interface UserProfileResponse {
+    display_name: string | null;
+    organisation: string | null;
+    tier: string;
+    message_credits_used: number;
+    credits_reset_date: string | null;
+    tabular_model: string;
+    provider_availability: ProviderAvailability;
+}
+
 const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
@@ -95,6 +111,22 @@ export async function createProject(
 
 export async function deleteAccount(): Promise<void> {
     return apiRequest<void>("/user/account", { method: "DELETE" });
+}
+
+export async function getUserProfile(): Promise<UserProfileResponse> {
+    return apiRequest<UserProfileResponse>("/user/profile");
+}
+
+export async function updateUserProfile(payload: {
+    display_name?: string;
+    organisation?: string;
+    tabular_model?: string;
+}): Promise<UserProfileResponse> {
+    return apiRequest<UserProfileResponse>("/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
 }
 
 export async function getProject(projectId: string): Promise<MikeProject> {

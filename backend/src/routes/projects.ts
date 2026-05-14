@@ -10,6 +10,15 @@ import { downloadFile, uploadFile, storageKey } from "../lib/storage";
 import { docxToPdf, convertedPdfKey } from "../lib/convert";
 import { checkProjectAccess } from "../lib/access";
 import { singleFileUpload } from "../lib/upload";
+import { errorLog } from "../lib/log";
+import {
+  ensureObject,
+  parseOptionalEmailArray,
+  parseOptionalNullableString,
+  parseOptionalString,
+  parseRequiredTrimmedString,
+  ValidationError,
+} from "../lib/validation";
 
 export const projectsRouter = Router();
 const ALLOWED_TYPES = new Set(["pdf", "docx", "doc"]);
@@ -74,22 +83,32 @@ projectsRouter.get("/", requireAuth, async (req, res) => {
 // POST /projects
 projectsRouter.post("/", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
-  const { name, cm_number, shared_with } = req.body as {
-    name: string;
-    cm_number?: string;
-    shared_with?: string[];
-  };
-  if (!name?.trim())
-    return void res.status(400).json({ detail: "name is required" });
+  let name: string;
+  let cm_number: string | null = null;
+  let shared_with: string[] = [];
+  try {
+    const body = ensureObject(req.body);
+    name = parseRequiredTrimmedString(body.name, "name");
+    cm_number = parseOptionalNullableString(body.cm_number, "cm_number") ?? null;
+    shared_with =
+      parseOptionalEmailArray(body.shared_with, "shared_with", {
+        maxItems: 200,
+      }) ?? [];
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
   const db = createServerSupabase();
   const { data, error } = await db
     .from("projects")
     .insert({
       user_id: userId,
-      name: name.trim(),
-      cm_number: cm_number ?? null,
-      shared_with: shared_with ?? [],
+      name,
+      cm_number,
+      shared_with,
     })
     .select("*")
     .single();
@@ -231,20 +250,31 @@ projectsRouter.patch("/:projectId", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
   const { projectId } = req.params;
   const updates: Record<string, unknown> = {};
-  if (req.body.name != null) updates.name = req.body.name;
-  if (req.body.cm_number != null) updates.cm_number = req.body.cm_number;
-  if (Array.isArray(req.body.shared_with)) {
-    // Normalise: lowercase + dedupe + drop empties.
-    const seen = new Set<string>();
-    const cleaned: string[] = [];
-    for (const raw of req.body.shared_with) {
-      if (typeof raw !== "string") continue;
-      const e = raw.trim().toLowerCase();
-      if (!e || seen.has(e)) continue;
-      seen.add(e);
-      cleaned.push(e);
+  try {
+    const body = ensureObject(req.body);
+    const name = parseOptionalString(body.name, "name");
+    if (name !== undefined) {
+      const trimmed = name.trim();
+      if (!trimmed) {
+        return void res.status(400).json({ detail: "name is required" });
+      }
+      updates.name = trimmed;
     }
-    updates.shared_with = cleaned;
+    if ("cm_number" in body) {
+      updates.cm_number =
+        parseOptionalNullableString(body.cm_number, "cm_number") ?? null;
+    }
+    const sharedWith = parseOptionalEmailArray(body.shared_with, "shared_with", {
+      maxItems: 200,
+    });
+    if (sharedWith !== undefined) {
+      updates.shared_with = sharedWith;
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
   }
 
   const db = createServerSupabase();
@@ -487,8 +517,20 @@ projectsRouter.post("/:projectId/folders", requireAuth, async (req, res) => {
   const userId = res.locals.userId as string;
   const userEmail = res.locals.userEmail as string | undefined;
   const { projectId } = req.params;
-  const { name, parent_folder_id } = req.body as { name: string; parent_folder_id?: string | null };
-  if (!name?.trim()) return void res.status(400).json({ detail: "name is required" });
+  let name: string;
+  let parent_folder_id: string | null = null;
+  try {
+    const body = ensureObject(req.body);
+    name = parseRequiredTrimmedString(body.name, "name");
+    parent_folder_id =
+      parseOptionalNullableString(body.parent_folder_id, "parent_folder_id") ??
+      null;
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
   const db = createServerSupabase();
   const access = await checkProjectAccess(projectId, userId, userEmail, db);
@@ -503,8 +545,8 @@ projectsRouter.post("/:projectId/folders", requireAuth, async (req, res) => {
   const { data, error } = await db.from("project_subfolders").insert({
     project_id: projectId,
     user_id: userId,
-    name: name.trim(),
-    parent_folder_id: parent_folder_id ?? null,
+    name,
+    parent_folder_id,
   }).select("*").single();
   if (error) return void res.status(500).json({ detail: error.message });
   res.status(201).json(data);
@@ -515,18 +557,34 @@ projectsRouter.patch("/:projectId/folders/:folderId", requireAuth, async (req, r
   const userId = res.locals.userId as string;
   const userEmail = res.locals.userEmail as string | undefined;
   const { projectId, folderId } = req.params;
-  const body = req.body as { name?: string; parent_folder_id?: string | null };
+  let body: Record<string, unknown>;
+  try {
+    body = ensureObject(req.body);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
   const db = createServerSupabase();
   const access = await checkProjectAccess(projectId, userId, userEmail, db);
   if (!access.ok) return void res.status(404).json({ detail: "Project not found" });
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (body.name != null) updates.name = body.name.trim();
+  const name = parseOptionalString(body.name, "name");
+  if (name !== undefined) {
+    const trimmed = name.trim();
+    if (!trimmed) return void res.status(400).json({ detail: "name is required" });
+    updates.name = trimmed;
+  }
   if ("parent_folder_id" in body) {
+    const parentFolderId =
+      parseOptionalNullableString(body.parent_folder_id, "parent_folder_id") ??
+      null;
     // Cycle check: walk up the tree from the proposed parent to ensure folderId is not an ancestor
-    if (body.parent_folder_id) {
-      let cur: string | null = body.parent_folder_id;
+    if (parentFolderId) {
+      let cur: string | null = parentFolderId;
       while (cur) {
         if (cur === folderId) return void res.status(400).json({ detail: "Cannot move a folder into itself or a descendant" });
         const { data: p }: { data: { parent_folder_id: string | null } | null } =
@@ -534,7 +592,7 @@ projectsRouter.patch("/:projectId/folders/:folderId", requireAuth, async (req, r
         cur = p?.parent_folder_id ?? null;
       }
     }
-    updates.parent_folder_id = body.parent_folder_id ?? null;
+    updates.parent_folder_id = parentFolderId;
   }
 
   const { data, error } = await db.from("project_subfolders")
@@ -569,7 +627,16 @@ projectsRouter.patch("/:projectId/documents/:documentId/folder", requireAuth, as
   const userId = res.locals.userId as string;
   const userEmail = res.locals.userEmail as string | undefined;
   const { projectId, documentId } = req.params;
-  const { folder_id } = req.body as { folder_id: string | null };
+  let folder_id: string | null = null;
+  try {
+    const body = ensureObject(req.body);
+    folder_id = parseOptionalNullableString(body.folder_id, "folder_id") ?? null;
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return void res.status(error.status).json({ detail: error.message });
+    }
+    throw error;
+  }
 
   const db = createServerSupabase();
   const access = await checkProjectAccess(projectId, userId, userEmail, db);
@@ -662,7 +729,7 @@ export async function handleDocumentUpload(
         );
         pdfStoragePath = pdfKey;
       } catch (err) {
-        console.error(
+        errorLog(
           `[upload] DOCX→PDF conversion failed for ${filename}:`,
           err,
         );

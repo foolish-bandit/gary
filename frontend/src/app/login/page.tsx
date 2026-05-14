@@ -8,15 +8,29 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { SiteLogo } from "@/components/site-logo";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+    isDevAuthBypassEnabled,
+    verifyWorkspaceAccess,
+} from "@/lib/workspaceAccess";
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return "Could not sign in. Check your email and password and try again.";
+}
+
 export default function LoginPage() {
     const router = useRouter();
-    const { isAuthenticated, authLoading } = useAuth();
+    const {
+        isAuthenticated,
+        authLoading,
+        authError,
+        clearAuthError,
+    } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const isDevBypassEnabled =
-        process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
+    const isDevBypassEnabled = isDevAuthBypassEnabled();
 
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
@@ -24,10 +38,17 @@ export default function LoginPage() {
         }
     }, [authLoading, isAuthenticated, router]);
 
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        clearAuthError();
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -37,9 +58,17 @@ export default function LoginPage() {
 
             if (error) throw error;
 
-            router.push("/assistant");
-        } catch (error: any) {
-            setError(error.message || "Could not sign in. Check your email and password and try again.");
+            if (data.session) {
+                const access = await verifyWorkspaceAccess(
+                    data.session.access_token,
+                );
+                if (!access.ok && access.denySession) {
+                    await supabase.auth.signOut();
+                    setError(access.message);
+                }
+            }
+        } catch (error) {
+            setError(getErrorMessage(error));
         } finally {
             setLoading(false);
         }
@@ -51,7 +80,6 @@ export default function LoginPage() {
                 <SiteLogo size="md" className="md:text-4xl" asLink />
             </div>
             <div className="w-full max-w-md">
-                {/* Login Form */}
                 <div className="bg-white border border-gray-200 rounded-2xl p-8">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-left text-2xl font-serif">
@@ -108,7 +136,8 @@ export default function LoginPage() {
 
                         {isDevBypassEnabled && (
                             <div className="text-amber-800 text-sm bg-amber-50 border border-amber-200 p-3 rounded">
-                                Dev auth bypass is enabled. You can continue directly to Gary.
+                                Dev auth bypass is enabled. You can continue
+                                directly to Gary.
                             </div>
                         )}
 
@@ -123,7 +152,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full mt-5 bg-black hover:bg-gray-900 text-white"
                         >
-                            {loading ? "Logging in…" : "Log in"}
+                            {loading ? "Logging in..." : "Log in"}
                         </Button>
                     </form>
                 </div>

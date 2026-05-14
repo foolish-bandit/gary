@@ -822,8 +822,8 @@ export function useAssistantChat({
             }
 
             return streamedChatId || null;
-        } catch (error: any) {
-            if (error.name === "AbortError") {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === "AbortError") {
                 flushDrip();
                 setMessages((prev) => {
                     const last = prev[prev.length - 1];
@@ -873,7 +873,7 @@ export function useAssistantChat({
             } else {
                 stopDrip();
                 const errorMessage =
-                    typeof error?.message === "string" && error.message
+                    error instanceof Error && error.message
                         ? error.message
                         : "Sorry, something went wrong.";
                 setMessages((prev) => {

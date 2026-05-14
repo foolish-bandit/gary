@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
@@ -31,7 +31,6 @@ import { supabase } from "@/lib/supabase";
  */
 function BulkEditActions({
     pending,
-    filenameByDocId,
     onViewClick,
     onResolveStart,
     onResolved,
@@ -41,7 +40,6 @@ function BulkEditActions({
         annotation: MikeEditAnnotation;
         filename: string;
     }[];
-    filenameByDocId: Map<string, string>;
     onViewClick?: (ann: MikeEditAnnotation, filename: string) => void;
     onResolveStart?: (args: {
         editId: string;
@@ -281,7 +279,6 @@ function EditCardsSection({
                 <div className="px-3 pt-3">
                     <BulkEditActions
                         pending={pending}
-                        filenameByDocId={filenameByDocId}
                         onViewClick={onViewClick}
                         onResolveStart={onResolveStart}
                         onResolved={onResolved}
@@ -315,16 +312,29 @@ function ResponseStatus({ status }: { status: StatusState }) {
     const isError = status === "error";
 
     useEffect(() => {
+        let frame = 0;
         if (wasActiveRef.current && !isActive) {
-            setShowDone(true);
-            setDoneVisible(true);
+            frame = requestAnimationFrame(() => {
+                setShowDone(true);
+                setDoneVisible(true);
+            });
             const t = setTimeout(() => setDoneVisible(false), 1500);
-            return () => clearTimeout(t);
-        } else if (!wasActiveRef.current && isActive) {
-            setShowDone(false);
-            setDoneVisible(false);
+            wasActiveRef.current = isActive;
+            return () => {
+                if (frame) cancelAnimationFrame(frame);
+                clearTimeout(t);
+            };
+        }
+        if (!wasActiveRef.current && isActive) {
+            frame = requestAnimationFrame(() => {
+                setShowDone(false);
+                setDoneVisible(false);
+            });
         }
         wasActiveRef.current = isActive;
+        return () => {
+            if (frame) cancelAnimationFrame(frame);
+        };
     }, [isActive]);
 
     return (
@@ -405,7 +415,7 @@ function ReasoningBlock({
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                            code: ({ node, ...props }) => (
+                            code: ({ ...props }) => (
                                 <code
                                     className="font-serif text-gray-600"
                                     {...props}
@@ -838,7 +848,7 @@ function MarkdownContent({
                 ]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
-                    table: ({ node, ...props }) => (
+                    table: ({ ...props }) => (
                         <div className="overflow-x-auto my-4">
                             <table
                                 className="min-w-full divide-y divide-gray-300 border border-gray-200 rounded-lg overflow-hidden"
@@ -846,54 +856,56 @@ function MarkdownContent({
                             />
                         </div>
                     ),
-                    thead: ({ node, ...props }) => (
+                    thead: ({ ...props }) => (
                         <thead className="bg-gray-50" {...props} />
                     ),
-                    tbody: ({ node, ...props }) => (
+                    tbody: ({ ...props }) => (
                         <tbody
                             className="divide-y divide-gray-200 bg-white"
                             {...props}
                         />
                     ),
-                    tr: ({ node, ...props }) => <tr {...props} />,
-                    th: ({ node, ...props }) => (
+                    tr: ({ ...props }) => <tr {...props} />,
+                    th: ({ ...props }) => (
                         <th
                             className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                             {...props}
                         />
                     ),
-                    td: ({ node, ...props }) => (
+                    td: ({ ...props }) => (
                         <td
                             className="whitespace-normal px-3 py-4 text-sm text-gray-900"
                             {...props}
                         />
                     ),
-                    h1: ({ node, ...props }) => (
+                    h1: ({ ...props }) => (
                         <h1
                             className="mt-6 mb-4 text-3xl font-serif font-semibold"
                             {...props}
                         />
                     ),
-                    h2: ({ node, ...props }) => (
+                    h2: ({ ...props }) => (
                         <h2
                             className="mt-5 mb-3 text-2xl font-serif font-semibold"
                             {...props}
                         />
                     ),
-                    h3: ({ node, ...props }) => (
+                    h3: ({ ...props }) => (
                         <h3
                             className="text-xl font-semibold mt-4 mb-2"
                             {...props}
                         />
                     ),
-                    h4: ({ node, ...props }) => (
+                    h4: ({ ...props }) => (
                         <h4
                             className="text-lg font-semibold mt-4 mb-2"
                             {...props}
                         />
                     ),
                     p: ({ node, ...props }) => {
-                        const parent = (node as any)?.parent;
+                        const parent = (
+                            node as { parent?: { type?: string } } | undefined
+                        )?.parent;
                         if (parent?.type === "listItem") {
                             return (
                                 <p
@@ -904,28 +916,28 @@ function MarkdownContent({
                         }
                         return <p className="mb-4 leading-7" {...props} />;
                     },
-                    ul: ({ node, ...props }) => (
+                    ul: ({ ...props }) => (
                         <ul
                             className="list-disc list-outside mb-4 pl-6"
                             {...props}
                         />
                     ),
-                    ol: ({ node, ...props }) => (
+                    ol: ({ ...props }) => (
                         <ol
                             className="list-decimal list-outside mb-4 pl-6"
                             {...props}
                         />
                     ),
-                    li: ({ node, ...props }) => (
+                    li: ({ ...props }) => (
                         <li className="mb-2 leading-7" {...props} />
                     ),
-                    strong: ({ node, ...props }) => (
+                    strong: ({ ...props }) => (
                         <strong className="font-semibold" {...props} />
                     ),
-                    em: ({ node, ...props }) => (
+                    em: ({ ...props }) => (
                         <em className="italic" {...props} />
                     ),
-                    code: ({ node, children, ...props }) => {
+                    code: ({ children, ...props }) => {
                         const text = String(children);
                         const citMatch = text.match(/^§(\d+)§$/);
                         if (citMatch) {
@@ -959,13 +971,13 @@ function MarkdownContent({
                             </code>
                         );
                     },
-                    blockquote: ({ node, ...props }) => (
+                    blockquote: ({ ...props }) => (
                         <blockquote
                             className="border-l-4 border-gray-300 pl-4 italic my-4"
                             {...props}
                         />
                     ),
-                    a: ({ node, href, children, ...props }) => (
+                    a: ({ href, children, ...props }) => (
                         <a
                             href={href}
                             className="text-blue-600 hover:text-blue-700 underline"
@@ -976,7 +988,7 @@ function MarkdownContent({
                             {children}
                         </a>
                     ),
-                    hr: ({ node, ...props }) => (
+                    hr: ({ ...props }) => (
                         <hr className="my-6 border-gray-200" {...props} />
                     ),
                 }}
@@ -1142,7 +1154,6 @@ export function AssistantMessage({
     isEditReloading,
     resolvedEditStatuses,
 }: Props) {
-    const messageKey = useId();
     const contentDivRef = useRef<HTMLDivElement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     // Per-document override of the download URL, set as Accept/Reject resolves

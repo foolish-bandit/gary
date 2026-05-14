@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ColumnConfig } from "../shared/types";
-import { formatIcon, formatLabel } from "../tabular/columnFormat";
+import { FORMAT_OPTIONS, formatLabel } from "../tabular/columnFormat";
 
 interface Props {
     col: ColumnConfig;
@@ -13,7 +13,10 @@ interface Props {
 }
 
 export function WFColumnViewModal({ col, onClose }: Props) {
-    const FormatIcon = formatIcon(col.format ?? "text");
+    const formatOption =
+        FORMAT_OPTIONS.find((option) => option.value === (col.format ?? "text")) ??
+        FORMAT_OPTIONS[0];
+    const FormatIcon = formatOption.icon;
     return createPortal(
         <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/20 backdrop-blur-xs">
             <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl flex flex-col h-[600px]">

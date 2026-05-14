@@ -1,4 +1,5 @@
 import type { OpenAIToolSchema } from "./types";
+import type { ChatCompletionTool } from "openai/resources/chat/completions";
 
 // ---------------------------------------------------------------------------
 // Tool-schema adapters
@@ -41,6 +42,17 @@ export function toGeminiTools(tools: OpenAIToolSchema[]): GeminiFunctionDeclarat
             ...(hasProps ? { parameters: params } : {}),
         };
     });
+}
+
+export function toOpenAITools(tools: OpenAIToolSchema[]): ChatCompletionTool[] {
+    return tools.map((t) => ({
+        type: "function",
+        function: {
+            name: t.function.name,
+            description: t.function.description,
+            parameters: normalizeSchema(t.function.parameters),
+        },
+    }));
 }
 
 // ---------------------------------------------------------------------------

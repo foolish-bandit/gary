@@ -9,10 +9,24 @@ import Link from "next/link";
 import { SiteLogo } from "@/components/site-logo";
 import { CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+    isDevAuthBypassEnabled,
+    verifyWorkspaceAccess,
+} from "@/lib/workspaceAccess";
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return "Could not create your account. Try again.";
+}
 
 export default function SignupPage() {
     const router = useRouter();
-    const { isAuthenticated, authLoading } = useAuth();
+    const {
+        isAuthenticated,
+        authLoading,
+        authError,
+        clearAuthError,
+    } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,8 +34,7 @@ export default function SignupPage() {
     const [organisation, setOrganisation] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const isDevBypassEnabled =
-        process.env.NEXT_PUBLIC_GARY_SKIP_AUTH === "true";
+    const isDevBypassEnabled = isDevAuthBypassEnabled();
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
@@ -30,19 +43,25 @@ export default function SignupPage() {
         }
     }, [authLoading, isAuthenticated, router, success]);
 
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+            setSuccess(false);
+        }
+    }, [authError]);
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        clearAuthError();
 
-        // Validate passwords match
         if (password !== confirmPassword) {
             setError("Passwords do not match");
             setLoading(false);
             return;
         }
 
-        // Validate password length
         if (password.length < 6) {
             setError("Password must be at least 6 characters");
             setLoading(false);
@@ -58,13 +77,19 @@ export default function SignupPage() {
             if (error) throw error;
 
             if (data.session) {
+                const access = await verifyWorkspaceAccess(
+                    data.session.access_token,
+                );
+                if (!access.ok && access.denySession) {
+                    await supabase.auth.signOut();
+                    setError(access.message);
+                    setLoading(false);
+                    return;
+                }
+
                 const trimmedName = name.trim();
                 const trimmedOrg = organisation.trim();
                 if (trimmedName || trimmedOrg) {
-                    // The handle_new_user DB trigger creates the
-                    // user_profiles row synchronously on auth.users insert,
-                    // so we UPDATE rather than upsert — RLS permits update
-                    // of the user's own row but blocks self-INSERT.
                     const { error: profileError } = await supabase
                         .from("user_profiles")
                         .update({
@@ -81,18 +106,18 @@ export default function SignupPage() {
                     }
                 }
             }
+
             setSuccess(true);
             setTimeout(() => {
                 router.push("/assistant");
             }, 2000);
-        } catch (error: any) {
-            setError(error.message || "Could not create your account. Try again.");
+        } catch (error) {
+            setError(getErrorMessage(error));
         } finally {
             setLoading(false);
         }
     };
 
-    // Success View
     if (success) {
         return (
             <div className="min-h-dvh bg-white flex items-start justify-center px-6 pt-32 md:pt-40 pb-10 relative">
@@ -108,7 +133,7 @@ export default function SignupPage() {
                             Account created!
                         </h2>
                         <p className="text-gray-600 leading-relaxed">
-                            Taking you to Gary…
+                            Taking you to Gary...
                         </p>
                     </div>
                 </div>
@@ -116,7 +141,6 @@ export default function SignupPage() {
         );
     }
 
-    // Default Signup Form View
     return (
         <div className="min-h-dvh bg-white flex items-start justify-center px-6 pt-32 md:pt-40 pb-10 relative">
             <div className="absolute top-4 md:top-8 left-1/2 -translate-x-1/2">
@@ -242,7 +266,8 @@ export default function SignupPage() {
 
                         {isDevBypassEnabled && (
                             <div className="text-amber-800 text-sm bg-amber-50 border border-amber-200 p-3 rounded">
-                                Dev auth bypass is enabled. You can continue directly to Gary.
+                                Dev auth bypass is enabled. You can continue
+                                directly to Gary.
                             </div>
                         )}
 
@@ -257,11 +282,10 @@ export default function SignupPage() {
                             disabled={loading}
                             className="w-full bg-black hover:bg-gray-900 text-white"
                         >
-                            {loading ? "Creating your account…" : "Sign up"}
+                            {loading ? "Creating your account..." : "Sign up"}
                         </Button>
                     </form>
 
-                    {/* Terms and Privacy */}
                     <div className="mt-4 text-center text-xs text-gray-500">
                         By signing up, you agree to our{" "}
                         <Link

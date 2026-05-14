@@ -77,11 +77,6 @@ export function WorkflowList() {
     }, []);
 
     useEffect(() => {
-        setSelectedIds([]);
-        setActionsOpen(false);
-    }, [activeTab, practiceFilter, typeFilter]);
-
-    useEffect(() => {
         function handleClick(e: MouseEvent) {
             if (
                 actionsRef.current &&
@@ -380,7 +375,11 @@ export function WorkflowList() {
             <ToolbarTabs
                 tabs={TABS}
                 active={activeTab}
-                onChange={setActiveTab}
+                onChange={(next) => {
+                    setActiveTab(next);
+                    setSelectedIds([]);
+                    setActionsOpen(false);
+                }}
                 actions={toolbarActions}
             />
 
